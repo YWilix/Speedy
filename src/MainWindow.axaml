@@ -2,8 +2,68 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-        x:Class="Speedy.MainWindow"
-        Title="Speedy">
-    Welcome to Avalonia!
+        mc:Ignorable="d" Width="750" Height="500"
+        x:Class="Speedy.MainWindow" Title="Speedy" WindowStartupLocation="CenterScreen" CanResize="False"
+        TransparencyLevelHint="Transparent" Background="Transparent" SystemDecorations="None">
+  <Window.Styles>
+    
+    <!-- Dark Theme Styles -->
+    
+    <Style Selector="Window > Border">
+      <Setter Property="Background" Value="{StaticResource DarkBackgColor}"/>
+    </Style>
+    
+    <Style Selector="Window > Border > Panel > Border">
+      <Setter Property="Background" Value="{StaticResource DarkBackgColor2}"/>
+    </Style>
+    
+    <Style Selector="TextBlock">
+      <Setter Property="Foreground" Value="White"/>
+    </Style>
+
+    <Style Selector="TextBox">
+      <Setter Property="Background" Value="{StaticResource DarkColor}"/>
+      <Setter Property="BorderBrush" Value="{StaticResource MainGradient}"/>
+      <Setter Property="Foreground" Value="White"/>
+      <Setter Property="BorderThickness" Value="0.8"/>
+    </Style>
+
+    <Style Selector="TextBox:pointerover /template/ Border, TextBox:focus /template/ Border">
+      <Setter Property="Background" Value="{StaticResource DarkColor}"/>
+      <Setter Property="BorderBrush" Value="{StaticResource MainGradient}"/>
+      <Setter Property="BorderThickness" Value="0.5"/>
+    </Style>
+
+    <!-- Light Theme Styles -->
+    
+    <Style Selector="Window > Border.Light">
+      <Setter Property="Background" Value="Red"/>
+    </Style>
+    
+  </Window.Styles>
+  <Border Classes.Light="{Binding IsLightTheme}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" CornerRadius="15">
+
+    <Panel>
+      <!-- Upper Bar -->
+
+      <Border Classes.Light="{Binding IsLightTheme}" HorizontalAlignment="Stretch" VerticalAlignment="Top" Height="30"
+              CornerRadius="15,15,0,0" PointerPressed="MoveWindow">
+        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Orientation="Horizontal">
+          <TextBlock Text="Speedy" VerticalAlignment="Center" HorizontalAlignment="Center" FontWeight="Bold"/>
+        </StackPanel>
+      </Border>
+
+      <!-- Client Area -->
+
+      <Canvas VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Height="470">
+        <StackPanel Orientation="Horizontal" VerticalAlignment="Top" HorizontalAlignment="Center"
+                    Margin="0,50,0,0">
+          <TextBox >
+          </TextBox>
+        </StackPanel>
+
+      </Canvas>
+    </Panel>
+    
+  </Border>
 </Window>
