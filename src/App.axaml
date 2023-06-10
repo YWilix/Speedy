@@ -6,12 +6,17 @@
         <FluentTheme Mode="Light"/>
     </Application.Styles>
   <Application.Resources>
-    <SolidColorBrush x:Key="DarkBackgColor" Color="#28283b" Opacity="0.95"/>
-    <SolidColorBrush x:Key="DarkBackgColor2" Color="#34344a"/>
-    <SolidColorBrush x:Key="DarkColor" Color="#252636" Opacity="0.02"/>
+    
     <LinearGradientBrush x:Key="MainGradient">
       <GradientStop Color="#00d0ff" Offset="0"/>
       <GradientStop Color="#0613cc" Offset="1"/>
     </LinearGradientBrush>
+
+    <!-- Dark Theme -->
+    
+    <SolidColorBrush x:Key="DarkBackgColor" Color="#28283b" Opacity="0.95"/>
+    <SolidColorBrush x:Key="DarkBackgColor2" Color="#34344a"/>
+    <SolidColorBrush x:Key="DarkColor" Color="#252636" Opacity="0.02"/>
+
   </Application.Resources>
 </Application>
