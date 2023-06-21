@@ -1,6 +1,4 @@
-﻿using Avalonia.Platform;
-using Avalonia.Threading;
-using Avalonia.Utilities;
+﻿using Avalonia.Threading;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -111,6 +109,14 @@ namespace Speedy.Scripts.Main
 
             if (DataContext != null) // Reseting the progress bar
                 DataContext.ProgressWidth = MaxWidth;
+        }
+
+        public static void MoveDifferenceBetween(string Source , string Destination)
+        {
+            if (!File.Exists(Source))
+                throw new FileNotFoundException($"The Source File {Source} doesn't exist !");
+            if (!File.Exists(Destination))
+                throw new FileNotFoundException($"The Destination File {Destination} doesn't exist !");
         }
 
         /// <summary>
