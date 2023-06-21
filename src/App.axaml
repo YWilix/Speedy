@@ -2,21 +2,244 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="Speedy.App">
 
-    <Application.Styles>
-        <FluentTheme Mode="Light"/>
-    </Application.Styles>
   <Application.Resources>
-    
+    <!-- General Colors -->
+
     <LinearGradientBrush x:Key="MainGradient">
       <GradientStop Color="#00d0ff" Offset="0"/>
       <GradientStop Color="#0613cc" Offset="1"/>
     </LinearGradientBrush>
 
+    <LinearGradientBrush x:Key="MainGradient2">
+      <GradientStop Color="#39c6f4" Offset="0"/>
+      <GradientStop Color="#35479d" Offset="1"/>
+    </LinearGradientBrush>
+
+    <SolidColorBrush x:Key="PointerOver" Color="#ffffff10" Opacity="0.1"/>
+
     <!-- Dark Theme -->
-    
-    <SolidColorBrush x:Key="DarkBackgColor" Color="#28283b" Opacity="0.95"/>
+
+    <SolidColorBrush x:Key="DarkBackgColor" Color="#28283b" Opacity="0.96"/>
     <SolidColorBrush x:Key="DarkBackgColor2" Color="#34344a"/>
     <SolidColorBrush x:Key="DarkColor" Color="#252636" Opacity="0.02"/>
 
+    <!-- Light Theme -->
+
+    <SolidColorBrush x:Key="LightBackgColor" Color="#cccccc" Opacity="0.97"/>
+    <SolidColorBrush x:Key="LightBackgColor2" Color="#dedede"/>
+    <SolidColorBrush x:Key="LightColor" Color="#f5f5f5" Opacity="0.2"/>
+    <SolidColorBrush x:Key="LightColor2" Color="#d1d1d2"/>
+    <SolidColorBrush x:Key="LightTextColor" Color="#385661"/>
   </Application.Resources>
+
+  <Application.Styles>
+        <FluentTheme Mode="Light"/>
+
+      <!-- Main styles -->
+
+      <!-- General Themes -->
+
+      <!-- Buttons -->
+    <Style Selector="Button.Normal">
+        <Setter Property="Background" Value="{StaticResource MainGradient2}"/>
+        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="FontSize" Value="17"/>
+        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+      </Style>
+
+    <Style Selector="Button.Normal:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{StaticResource MainGradient2}"/>
+        <Setter Property="TextBlock.Foreground" Value="White"/>
+        <Setter Property="TextBlock.FontWeight" Value="Bold"/>
+        <Setter Property="Opacity" Value="0.9"/>
+      </Style>
+
+    <Style Selector="Button.FileButton">
+      <Setter Property="Background">
+        <ImageBrush Source="avares://Speedy/Designs/Icons/FileIcon.png" Stretch="Uniform"/>
+      </Setter>
+      <Setter Property="OpacityMask">
+        <ImageBrush Source="avares://Speedy/Designs/Icons/FileIcon.png" Stretch="Uniform"/>
+      </Setter>
+    </Style>
+
+    <Style Selector="Button.FileButton:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background">
+        <ImageBrush Source="avares://Speedy/Designs/Icons/FileIcon.png" Stretch="Uniform"/>
+      </Setter>
+      <Setter Property="OpacityMask">
+        <ImageBrush Source="avares://Speedy/Designs/Icons/FileIcon.png" Stretch="Uniform"/>
+      </Setter>
+      <Setter Property="BorderBrush" Value="Transparent"/>
+      <Setter Property="Opacity" Value="0.9"/>
+    </Style>
+
+
+    <Style Selector="Button.ThemeButton">
+      <Setter Property="Background" Value="Transparent"/>
+    </Style>
+
+    <Style Selector="Button.ThemeButton:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="Opacity" Value="0.85"/>
+    </Style>
+
+
+    <!-- Dark Theme Styles -->
+
+    <!-- Backgrounds -->
+
+    <Style Selector="Border.ThemeBorder">
+      <Setter Property="Background" Value="{StaticResource DarkBackgColor}"/>
+    </Style>
+
+    <Style Selector="Border.BorderLighterBckg">
+      <Setter Property="Background" Value="{StaticResource DarkBackgColor2}"/>
+    </Style>
+
+    <!--Text Box -->
+
+    <Style Selector="TextBox">
+      <Setter Property="Background" Value="{StaticResource DarkColor}"/>
+      <Setter Property="BorderBrush" Value="{StaticResource MainGradient}"/>
+      <Setter Property="Foreground" Value="White"/>
+      <Setter Property="BorderThickness" Value="0.8"/>
+    </Style>
+
+    <Style Selector="TextBox:pointerover /template/ Border, TextBox:focus /template/ Border">
+      <Setter Property="Background" Value="{StaticResource DarkColor}"/>
+      <Setter Property="BorderBrush" Value="{StaticResource MainGradient}"/>
+      <Setter Property="BorderThickness" Value="0.5"/>
+    </Style>
+
+    <Style Selector="TextBox:focus, TextBox:pointerover">
+      <Setter Property="Foreground" Value="White" />
+    </Style>
+
+    <Style Selector="TextBox:pointerover /template/ TextBlock#PART_Watermark, TextBox:pointerover /template/ TextBlock#PART_FloatingWatermark">
+      <Setter Property="Foreground" Value="White" />
+    </Style>
+
+    <Style Selector="TextBox:focus /template/ TextBlock#PART_Watermark, TextBox:focus /template/ TextBlock#PART_FloatingWatermark">
+      <Setter Property="Foreground" Value="White" />
+    </Style>
+
+    <!-- Check Box -->
+
+    <!-- Unchecked state -->
+
+    <Style Selector="CheckBox">
+      <Setter Property="Foreground" Value="White"/>
+    </Style>
+
+    <Style Selector="CheckBox /template/ Border#NormalRectangle">
+      <Setter Property="BorderBrush" Value="White" />
+    </Style>
+
+    <Style Selector="CheckBox:pointerover /template/ ContentPresenter#ContentPresenter" >
+      <Setter Property="TextBlock.Foreground" Value="LightGray"/>
+    </Style>
+
+    <Style Selector="CheckBox:pointerover /template/ Border#NormalRectangle" >
+      <Setter Property="BorderBrush" Value="LightGray"/>
+    </Style>
+
+    <!-- Checked State -->
+
+    <Style Selector="CheckBox:not(.Light):checked /template/ ContentPresenter#ContentPresenter" >
+      <Setter Property="TextBlock.Foreground" Value="White"/>
+    </Style>
+
+    <Style Selector="CheckBox:not(.Light):checked /template/ Border#NormalRectangle" >
+      <Setter Property="BorderBrush" Value="White"/>
+    </Style>
+
+    <Style Selector="CheckBox:checked:pointerover /template/ ContentPresenter#ContentPresenter">
+      <Setter Property="TextBlock.Foreground" Value="LightGray" />
+    </Style>
+
+    <Style Selector="CheckBox:checked:pointerover /template/ Border#NormalRectangle">
+      <Setter Property="BorderBrush" Value="LightGray" />
+    </Style>
+
+    <!-- Others -->
+
+    <Style Selector="TextBlock">
+      <Setter Property="Foreground" Value="White"/>
+    </Style>
+
+    <Style Selector="Image.ThemeImage">
+      <Setter Property="Source" Value="avares://Speedy/Designs/Icons/SunIcon.png"/>
+    </Style>
+
+    <!-- Light Theme Styles -->
+
+    <!-- Backgrounds -->
+
+    <Style Selector="Border.ThemeBorder.Light">
+      <Setter Property="Background" Value="{StaticResource LightBackgColor}"/>
+    </Style>
+
+    <Style Selector="Border.BorderLighterBckg.Light">
+      <Setter Property="Background" Value="{StaticResource LightBackgColor2}"/>
+    </Style>
+
+    <!--Text Box -->
+
+    <Style Selector="TextBox.Light">
+      <Setter Property="Background" Value="{StaticResource LightColor}"/>
+      <Setter Property="BorderBrush" Value="{StaticResource MainGradient}"/>
+      <Setter Property="Foreground" Value="{StaticResource LightTextColor}"/>
+      <Setter Property="BorderThickness" Value="0.5"/>
+    </Style>
+
+    <Style Selector="TextBox.Light:pointerover /template/ Border, TextBox.Light:focus /template/ Border">
+      <Setter Property="Background" Value="{StaticResource LightColor}"/>
+      <Setter Property="BorderBrush" Value="{StaticResource MainGradient}"/>
+      <Setter Property="BorderThickness" Value="0.5"/>
+    </Style>
+
+    <Style Selector="TextBox.Light:focus, TextBox.Light:pointerover">
+      <Setter Property="Foreground" Value="{StaticResource LightTextColor}" />
+    </Style>
+
+    <Style Selector="TextBox.Light /template/ TextBlock#PART_Watermark, TextBox.Light /template/ TextBlock#PART_FloatingWatermark">
+      <Setter Property="Foreground" Value="Black" />
+    </Style>
+
+    <Style Selector="TextBox.Light:pointerover /template/ TextBlock#PART_Watermark, TextBox.Light:pointerover /template/ TextBlock#PART_FloatingWatermark">
+      <Setter Property="Foreground" Value="Black" />
+    </Style>
+
+    <Style Selector="TextBox.Light:focus /template/ TextBlock#PART_Watermark, TextBox.Light:focus /template/ TextBlock#PART_FloatingWatermark">
+      <Setter Property="Foreground" Value="Black" />
+    </Style>
+
+    <!-- Check Box -->
+
+    <Style Selector="CheckBox.Light">
+      <Setter Property="Foreground" Value="{StaticResource LightTextColor}"/>
+    </Style>
+
+    <Style Selector="CheckBox.Light /template/ Border#NormalRectangle">
+      <Setter Property="BorderBrush" Value="{StaticResource LightTextColor}" />
+    </Style>
+
+    <Style Selector="CheckBox.Light:pointerover /template/ ContentPresenter#ContentPresenter" >
+      <Setter Property="TextBlock.Foreground" Value="{StaticResource LightTextColor}"/>
+    </Style>
+
+    <!-- Others -->
+
+    <Style Selector="TextBlock.Light">
+      <Setter Property="Foreground" Value="{StaticResource LightTextColor}"/>
+    </Style>
+
+    <Style Selector="Image.ThemeImage.Light">
+      <Setter Property="Source" Value="avares://Speedy/Designs/Icons/MoonIcon.png"/>
+    </Style>
+    
+  </Application.Styles> 
 </Application>
