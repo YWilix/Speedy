@@ -1,3 +1,7 @@
+#Some user-specific files
 .vs/
+*.user
+*.suo
+
 /src/bin/
 /src/obj/
