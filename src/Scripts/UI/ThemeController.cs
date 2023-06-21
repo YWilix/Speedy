@@ -1,9 +1,5 @@
 ﻿using Avalonia.Themes.Fluent;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Speedy.Scripts
 {
@@ -28,7 +24,7 @@ namespace Speedy.Scripts
             } 
         }
 
-        private static FluentThemeMode _MainTheme = FluentThemeMode.Dark;
+        private static FluentThemeMode _MainTheme = FluentThemeMode.Light;
 
         public static event Action OnThemeChanged;
     }
