@@ -1,0 +1,37 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" Width="350" Height="170"
+        x:Class="Speedy.Windows.MessageDialog" Title="Speedy" WindowStartupLocation="CenterScreen" CanResize="False"
+        TransparencyLevelHint="Transparent" Background="Transparent" SystemDecorations="None">
+  <Window.Styles>
+    <Style Selector="Button.Normal">
+      <Setter Property="Width" Value="60"/>
+      <Setter Property="Height" Value="30"/>
+      <Setter Property="FontSize" Value="14"/>
+    </Style>
+  </Window.Styles>
+
+  <Border Classes.Light="{Binding IsLightTheme}" Classes="ThemeBorder" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" CornerRadius="15">
+    <StackPanel VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+      <!-- Upper Bar -->
+
+      <Border Classes.Light="{Binding IsLightTheme}" Classes="BorderLighterBckg" HorizontalAlignment="Stretch" VerticalAlignment="Top" Height="30"
+              CornerRadius="15,15,0,0" PointerPressed="MoveWindow">
+        <Panel HorizontalAlignment="Stretch">
+          <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Orientation="Horizontal">
+            <TextBlock Name="TitleText" Classes.Light="{Binding IsLightTheme}" Text="Speedy" VerticalAlignment="Center" HorizontalAlignment="Center" FontWeight="Bold"/>
+          </StackPanel>
+        </Panel>
+      </Border>
+      <!-- Client Area -->
+      <TextBlock Name="MainText" Classes.Light="{Binding IsLightTheme}" HorizontalAlignment="Stretch" Height="70" 
+                 Margin="20,20,20,5" Text="ERROR :SYSTEM THREAD EXCEPTION" TextWrapping="Wrap" Foreground="Red" />
+      <StackPanel Orientation="Horizontal" VerticalAlignment="Stretch" HorizontalAlignment="Right" Margin="0,0,18,0" Spacing="10">
+        <Button Name="FirstButton" Classes="Normal" Click="NoClicked" Content="No" Opacity="0.9"/>
+        <Button Name="SecondButton" Classes="Normal" Click="YesOkClicked" Content="Yes"/>
+      </StackPanel>
+    </StackPanel>
+  </Border>
+</Window>
