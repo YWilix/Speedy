@@ -4,8 +4,20 @@
     <TargetFramework>net6.0</TargetFramework>
     <Nullable>enable</Nullable>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+    <StartupObject>Speedy.Program</StartupObject>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Designs\Logo\MainLogo.ico</ApplicationIcon>
+    <Authors>Wilix</Authors>
+    <Company>Wilix</Company>
+    <Copyright>Wilix</Copyright>
+    <PackageIcon>MainLogo.png</PackageIcon>
   </PropertyGroup>
+  <ItemGroup>
+    <AvaloniaResource Include="Designs\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Designs\Logo\MainLogo.ico" />
+  </ItemGroup>
 
   <ItemGroup>
     <TrimmerRootAssembly Include="Avalonia.Themes.Fluent" />
@@ -17,5 +29,12 @@
     <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
     <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="0.10.18" />
     <PackageReference Include="XamlNameReferenceGenerator" Version="1.6.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Designs\Logo\MainLogo.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
   </ItemGroup>
 </Project>
