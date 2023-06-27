@@ -182,6 +182,8 @@ namespace Speedy.Scripts.Main
                 if (PauseToken.IsCancellationRequested)//Checking if the copying has paused
                 {
                     LastState = new CopyStateData("", "", index, Destf.Position, ProgressBarWidth,IsKeepTheNewest);
+                    Sourcef.Close();
+                    Destf.Close();
                     PauseToken.ThrowIfCancellationRequested();
                 }
             }
@@ -227,6 +229,8 @@ namespace Speedy.Scripts.Main
                 if (PauseToken.IsCancellationRequested)//Checking if the copying has paused
                 {
                     LastState = new CopyStateData("", "", index, Destf.Position, ProgressBarWidth, IsKeepTheNewest);
+                    Sourcef.Close();
+                    Destf.Close();
                     PauseToken.ThrowIfCancellationRequested();
                 }
             }
