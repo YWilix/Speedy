@@ -40,6 +40,7 @@
       <!-- General Themes -->
 
       <!-- Buttons -->
+    
     <Style Selector="Button.Normal">
         <Setter Property="Background" Value="{StaticResource MainGradient2}"/>
         <Setter Property="Foreground" Value="White"/>
@@ -76,6 +77,15 @@
       <Setter Property="Opacity" Value="0.9"/>
     </Style>
 
+    <Style Selector="Button.FileButton:disabled /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background">
+        <ImageBrush Source="avares://Speedy/Designs/Icons/FileIcon.png" Stretch="Uniform"/>
+      </Setter>
+      <Setter Property="OpacityMask">
+        <ImageBrush Source="avares://Speedy/Designs/Icons/FileIcon.png" Stretch="Uniform"/>
+      </Setter>
+      <Setter Property="Opacity" Value="0.85"/>
+    </Style>
 
     <Style Selector="Button.ThemeButton">
       <Setter Property="Background" Value="Transparent"/>
@@ -86,6 +96,79 @@
       <Setter Property="Opacity" Value="0.85"/>
     </Style>
 
+    <Style Selector="Button.PauseButton:not(.Paused)">
+      <Setter Property="Width" Value="20"/>
+      <Setter Property="Height" Value="25"/>
+      <Setter Property="Background">
+        <ImageBrush Source="avares://Speedy/Designs/Icons/ContinuedIcon.png"/>
+      </Setter>
+      <Setter Property="OpacityMask">
+        <ImageBrush Source="avares://Speedy/Designs/Icons/ContinuedIcon.png"/>
+      </Setter>
+    </Style>
+
+    <Style Selector="Button.PauseButton:disabled:not(.Paused) /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background">
+        <ImageBrush Source="avares://Speedy/Designs/Icons/ContinuedIcon.png"/>
+      </Setter>
+      <Setter Property="OpacityMask">
+        <ImageBrush Source="avares://Speedy/Designs/Icons/ContinuedIcon.png"/>
+      </Setter>
+      <Setter Property="Opacity" Value="0.8"/>
+    </Style>
+    
+    <Style Selector="Button.PauseButton:pointerover:not(.Paused) /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background">
+        <ImageBrush Source="avares://Speedy/Designs/Icons/ContinuedIcon.png"/>
+      </Setter>
+      <Setter Property="OpacityMask">
+        <ImageBrush Source="avares://Speedy/Designs/Icons/ContinuedIcon.png"/>
+      </Setter>
+      <Setter Property="Opacity" Value="0.87"/>
+    </Style>
+
+    <Style Selector="Button.PauseButton.Paused" >
+      <Setter Property="Width" Value="20"/>
+      <Setter Property="Height" Value="25"/>
+      <Setter Property="Background">
+        <ImageBrush Source="avares://Speedy/Designs/Icons/StoppedIcon.png"/>
+      </Setter>
+      <Setter Property="OpacityMask">
+        <ImageBrush Source="avares://Speedy/Designs/Icons/StoppedIcon.png"/>
+      </Setter>
+    </Style>
+
+    <Style Selector="Button.PauseButton.Paused:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background">
+        <ImageBrush Source="avares://Speedy/Designs/Icons/StoppedIcon.png"/>
+      </Setter>
+      <Setter Property="OpacityMask">
+        <ImageBrush Source="avares://Speedy/Designs/Icons/StoppedIcon.png"/>
+      </Setter>
+      <Setter Property="Opacity" Value="0.87"/>
+    </Style>
+
+    <Style Selector="Button.PauseButton.Paused:disabled /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background">
+        <ImageBrush Source="avares://Speedy/Designs/Icons/StoppedIcon.png"/>
+      </Setter>
+      <Setter Property="OpacityMask">
+        <ImageBrush Source="avares://Speedy/Designs/Icons/StoppedIcon.png"/>
+      </Setter>
+      <Setter Property="Opacity" Value="0.8"/>
+    </Style>
+
+    <!-- Text Block -->
+    
+    <Style Selector="TextBlock:disabled">
+      <Setter Property="Opacity" Value="0.65"/>
+    </Style>
+
+    <!-- Others -->
+
+    <Style Selector="ToolTip">
+      <Setter Property="Background" Value="{Binding #UpperBorder.Background}"/>
+    </Style>
 
     <!-- Dark Theme Styles -->
 
@@ -126,6 +209,19 @@
       <Setter Property="Foreground" Value="White" />
     </Style>
 
+    <!-- Disabled State -->
+    
+    <Style Selector="TextBox:disabled">
+      <Setter Property="Foreground" Value="White" />
+      <Setter Property="Opacity" Value="0.8"/>
+    </Style>
+
+    <Style Selector="TextBox:disabled /template/ Border">
+      <Setter Property="Background" Value="{StaticResource DarkColor}"/>
+      <Setter Property="BorderBrush" Value="{StaticResource MainGradient}"/>
+      <Setter Property="BorderThickness" Value="0.9"/>
+    </Style>
+
     <!-- Check Box -->
 
     <!-- Unchecked state -->
@@ -146,6 +242,21 @@
       <Setter Property="BorderBrush" Value="LightGray"/>
     </Style>
 
+    <!-- Unchecked Disabled state -->
+
+    <Style Selector="CheckBox:disabled">
+      <Setter Property="Opacity" Value="0.9"/> 
+    </Style>
+    
+    <Style Selector="CheckBox:disabled /template/ ContentPresenter#ContentPresenter">
+      <Setter Property="TextBlock.Foreground" Value="White" />
+    </Style>
+
+    <Style Selector="CheckBox:disabled /template/ Border#NormalRectangle">
+      <Setter Property="BorderBrush" Value="White"/>
+      <Setter Property="Opacity" Value="0.4"/>
+    </Style>
+
     <!-- Checked State -->
 
     <Style Selector="CheckBox:not(.Light):checked /template/ ContentPresenter#ContentPresenter" >
@@ -164,6 +275,19 @@
       <Setter Property="BorderBrush" Value="LightGray" />
     </Style>
 
+    <!-- Disabled State -->
+
+    <Style Selector="TextBox:disabled">
+      <Setter Property="Foreground" Value="White" />
+      <Setter Property="Opacity" Value="0.5"/>
+    </Style>
+
+    <Style Selector="TextBox:disabled /template/ Border">
+      <Setter Property="Background" Value="{StaticResource DarkColor}"/>
+      <Setter Property="BorderBrush" Value="{StaticResource MainGradient}"/>
+      <Setter Property="BorderThickness" Value="0.5"/>
+    </Style>
+    
     <!-- Others -->
 
     <Style Selector="TextBlock">
@@ -217,6 +341,16 @@
       <Setter Property="Foreground" Value="Black" />
     </Style>
 
+    <!-- Disabled State -->
+
+    <Style Selector="TextBox.Light:disabled">
+      <Setter Property="Background" Value="{StaticResource LightColor}"/>
+      <Setter Property="BorderBrush" Value="{StaticResource MainGradient}"/>
+      <Setter Property="Foreground" Value="{StaticResource LightTextColor}"/>
+      <Setter Property="BorderThickness" Value="0.5"/>
+      <Setter Property="Opacity" Value="0.6"/>
+    </Style>
+
     <!-- Check Box -->
 
     <Style Selector="CheckBox.Light">
@@ -229,6 +363,22 @@
 
     <Style Selector="CheckBox.Light:pointerover /template/ ContentPresenter#ContentPresenter" >
       <Setter Property="TextBlock.Foreground" Value="{StaticResource LightTextColor}"/>
+    </Style>
+
+    <!-- Disabled state -->
+
+    <Style Selector="CheckBox.Light:disabled">
+      <Setter Property="Foreground" Value="{StaticResource LightTextColor}"/>
+      <Setter Property="Opacity" Value="0.6"/>
+    </Style>
+
+    <Style Selector="CheckBox:disabled /template/ ContentPresenter#ContentPresenter">
+      <Setter Property="TextBlock.Foreground" Value="{StaticResource LightTextColor}" />
+    </Style>
+    
+    <Style Selector="CheckBox.Light:disabled /template/ Border#NormalRectangle">
+      <Setter Property="BorderBrush" Value="{StaticResource LightTextColor}"/>
+      <Setter Property="Opacity" Value="0.6"/>
     </Style>
 
     <!-- Others -->
