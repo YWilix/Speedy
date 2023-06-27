@@ -9,7 +9,9 @@ namespace Speedy.Scripts.Main
 {
     internal static class SmartCopy
     {
-        private static CopyStateData LastState = null;
+        private const int buffersize = 1048576 * 2;// a size of 2 megabytes
+
+        private static CopyingData LastState = null;
 
         /// <summary>
         /// Copy a source directory (From) to a destination directory by only moving the differences between the two and ignoring the similarities
@@ -27,8 +29,8 @@ namespace Speedy.Scripts.Main
         /// <param name="DataContext">The data context of the main window (used to update the progress bar)</param>
         /// <param name="MaxWidth">The Width of the main window (used to update the progress bar)</param> 
         public static void CopyDifference(string From , string To , bool KeepDeleted , bool KeepTheNewest , CancellationToken PauseToken ,
-                                          Action ToDoWhenComplete = null , Action<CopyStateData> ToDoWhenPause = null,BaseWindowDataContext DataContext = null , 
-                                          double MaxWidth = 0, CopyStateData Data = null)
+                                          Action ToDoWhenComplete = null , Action<CopyingData> ToDoWhenPause = null,BaseWindowDataContext DataContext = null , 
+                                          double MaxWidth = 0, CopyingData Data = null)
         {
             bool ispause = false;
 
@@ -71,7 +73,7 @@ namespace Speedy.Scripts.Main
         /// <param name="KeepTheNewest">
         /// indicates if we should always keep the newest version between the destination and the source file
         /// </param>
-        public static void CopyModifiedFiles(string From, string To , bool KeepTheNewest , CancellationToken PauseToken, CopyStateData Data = null ,
+        public static void CopyModifiedFiles(string From, string To , bool KeepTheNewest , CancellationToken PauseToken, CopyingData Data = null ,
                                                BaseWindowDataContext DataContext = null, double MaxWidth = 0)
         {
             if (!Directory.Exists(From))
@@ -96,7 +98,7 @@ namespace Speedy.Scripts.Main
                 {
                     if (PauseToken.IsCancellationRequested)
                     {
-                        LastState = new CopyStateData(From,To,false, KeepTheNewest,true);
+                        LastState = new CopyingData(From,To,false, KeepTheNewest,true);
                         PauseToken.ThrowIfCancellationRequested();
                     }
 
@@ -172,7 +174,6 @@ namespace Speedy.Scripts.Main
             Sourcef.Position = OldPos;
             Destf.Position = OldPos;
 
-            int buffersize = 1048576 * 2;// a size of 2 megabytes
             byte[] buffer = new byte[buffersize];//the buffer
             int bytesnumber;
             while ((bytesnumber = Sourcef.Read(buffer,0,buffersize)) > 0)
@@ -181,7 +182,7 @@ namespace Speedy.Scripts.Main
 
                 if (PauseToken.IsCancellationRequested)//Checking if the copying has paused
                 {
-                    LastState = new CopyStateData("", "", index, Destf.Position, ProgressBarWidth,IsKeepTheNewest);
+                    LastState = new CopyingData("", "", index, Destf.Position, ProgressBarWidth,IsKeepTheNewest);
                     Sourcef.Close();
                     Destf.Close();
                     PauseToken.ThrowIfCancellationRequested();
@@ -219,7 +220,6 @@ namespace Speedy.Scripts.Main
             Sourcef.Position = 0;
             Destf.Position = 0;
 
-            int buffersize = 1048576 * 2;// a size of 2 megabytes
             byte[] buffer = new byte[buffersize];//the buffer
             int bytesnumber;
             while ((bytesnumber = Sourcef.Read(buffer, 0, buffersize)) > 0)
@@ -228,7 +228,7 @@ namespace Speedy.Scripts.Main
 
                 if (PauseToken.IsCancellationRequested)//Checking if the copying has paused
                 {
-                    LastState = new CopyStateData("", "", index, Destf.Position, ProgressBarWidth, IsKeepTheNewest);
+                    LastState = new CopyingData("", "", index, Destf.Position, ProgressBarWidth, IsKeepTheNewest);
                     Sourcef.Close();
                     Destf.Close();
                     PauseToken.ThrowIfCancellationRequested();
@@ -263,7 +263,7 @@ namespace Speedy.Scripts.Main
                 {
                     if (PauseToken.IsCancellationRequested)//The copying is paused
                     {
-                        LastState = new CopyStateData(Source,Destination,true, IsKeepTheNewest);
+                        LastState = new CopyingData(Source,Destination,true, IsKeepTheNewest);
                         PauseToken.ThrowIfCancellationRequested();//Canceling the copying
                     }
                        
@@ -281,7 +281,7 @@ namespace Speedy.Scripts.Main
                 {
                     if (PauseToken.IsCancellationRequested)//The copying is paused
                     {
-                        LastState = new CopyStateData(Source, Destination, true, IsKeepTheNewest);
+                        LastState = new CopyingData(Source, Destination, true, IsKeepTheNewest);
                         PauseToken.ThrowIfCancellationRequested();//Canceling the copying
                     }
 
