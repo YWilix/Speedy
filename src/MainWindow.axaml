@@ -10,6 +10,22 @@
       <Setter Property="Width" Value="135"/>
       <Setter Property="Height" Value="41"/>
     </Style>
+    
+    <Style Selector="Image.LoadImage">
+      <Setter Property="Source" Value="avares://Speedy/Designs/Icons/LoadIcon.png"/>
+    </Style>
+
+    <Style Selector="Image.SaveImage">
+      <Setter Property="Source" Value="avares://Speedy/Designs/Icons/SaveIcon.png"/>
+    </Style>
+
+    <Style Selector="Button#MoveButton">
+     <Setter Property="Content" Value="Move"/>
+    </Style>
+
+    <Style Selector="Button#MoveButton.CancelState">
+      <Setter Property="Content" Value="Cancel"/>
+    </Style>
   </Window.Styles>
   
   <Border Classes.Light="{Binding IsLightTheme}" Classes="ThemeBorder" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
@@ -17,7 +33,7 @@
     <StackPanel VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
       <!-- Upper Bar -->
       
-      <Border Classes.Light="{Binding IsLightTheme}" Classes="BorderLighterBckg" HorizontalAlignment="Stretch" VerticalAlignment="Top" 
+      <Border Name="UpperBorder" Classes.Light="{Binding IsLightTheme}" Classes="BorderLighterBckg" HorizontalAlignment="Stretch" VerticalAlignment="Top" 
               Height="30" CornerRadius="15,15,0,0" PointerPressed="MoveWindow">
         <Panel HorizontalAlignment="Stretch">
           <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Orientation="Horizontal" Spacing="5">
@@ -38,29 +54,43 @@
         
         <StackPanel Orientation="Horizontal" VerticalAlignment="Top" HorizontalAlignment="Center"
                     Spacing="10" Margin="0,30,0,0">
-          <TextBlock Classes.Light="{Binding IsLightTheme}" Text="Source :" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="20"/>
-          <TextBox Name="sourcebox" Classes.Light="{Binding IsLightTheme}" Watermark="Please enter the path to the source folder" VerticalAlignment="Center" HorizontalAlignment="Center"
+          <TextBlock Classes.Light="{Binding IsLightTheme}" IsEnabled="{Binding !IsCopyingFiles}" Text="Source :"
+                     VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="20"/>
+          <TextBox Name="sourcebox" Classes.Light="{Binding IsLightTheme}" IsEnabled="{Binding !IsCopyingFiles}" Watermark="Please enter the path to the source folder" VerticalAlignment="Center" HorizontalAlignment="Center"
                    Height="40" Width="500" VerticalContentAlignment="Center"/>
-          <Button Click="SelectSourceFolder" Classes.Light="{Binding IsLightTheme}" Width="40" Height="{Binding $self.Width}" Classes="FileButton"/>
+          <Button Click="SelectSourceFolder" Classes="FileButton" Classes.Light="{Binding IsLightTheme}" IsEnabled="{Binding !IsCopyingFiles}"
+                  Width="40" Height="{Binding $self.Width}"/>
         </StackPanel>
         
         <StackPanel Orientation="Horizontal" VerticalAlignment="Top" HorizontalAlignment="Center" Spacing="10" Margin="-25,20,0,0">
-          <TextBlock Classes.Light="{Binding IsLightTheme}" Text="Destination :" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="17"/>
-          <TextBox Name="destinationbox" Classes.Light="{Binding IsLightTheme}" Watermark="Please enter the path to the destination folder" VerticalAlignment="Center" HorizontalAlignment="Center"
-                   Height="40" Width="500" VerticalContentAlignment="Center"/>
-          <Button Click="SelectDestinationFolder" Classes.Light="{Binding IsLightTheme}" Width="40" Height="{Binding $self.Width}" Classes="FileButton"/>
+          <TextBlock Classes.Light="{Binding IsLightTheme}" IsEnabled="{Binding !IsCopyingFiles}" Text="Destination :" 
+                     VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="17"/>
+          <TextBox Name="destinationbox" Classes.Light="{Binding IsLightTheme}" IsEnabled="{Binding !IsCopyingFiles}" Watermark="Please enter the path to the destination folder" 
+                   VerticalAlignment="Center" HorizontalAlignment="Center" Height="40" Width="500" VerticalContentAlignment="Center"/>
+          <Button Click="SelectDestinationFolder" Classes="FileButton" Classes.Light="{Binding IsLightTheme}" IsEnabled="{Binding !IsCopyingFiles}" 
+                  Width="40" Height="{Binding $self.Width}"/>
         </StackPanel>
         
         <StackPanel HorizontalAlignment="Center" Spacing="2">
-          <CheckBox Name="KeepDeletedBox" Classes.Light="{Binding IsLightTheme}" Content="Keep deleted files in destination" HorizontalAlignment="Center"
+          <CheckBox Name="KeepDeletedBox" Classes.Light="{Binding IsLightTheme}" IsEnabled="{Binding !IsCopyingFiles}" Content="Keep deleted files in destination" HorizontalAlignment="Center"
                     Margin="-14,0,0,0"/>
-          <CheckBox Name="LatestVerBox" Classes.Light="{Binding IsLightTheme}" Content="Always choose latest version of files" HorizontalAlignment="Center"
+          <CheckBox Name="LatestVerBox" Classes.Light="{Binding IsLightTheme}" IsEnabled="{Binding !IsCopyingFiles}" Content="Always choose latest version of files" HorizontalAlignment="Center"
                     Margin="14,0,0,0"/>
         </StackPanel>
         
-        <StackPanel HorizontalAlignment="Center" Orientation="Horizontal" Spacing="40">
+        <StackPanel HorizontalAlignment="Center" Orientation="Horizontal" Spacing="15">
           <Button Classes="Normal" Content="Quit" Click="QuitApplication"/>
-          <Button Name="MoveButton" Classes="Normal" Click="MoveDifference" Content="Move"/>
+          <Button Name="PauseButton" Classes.Paused="{Binding IsPaused}" Classes="PauseButton" IsEnabled="{Binding IsCopyingFiles}" Click="PauseButtonClicked"/>
+          <StackPanel Orientation="Horizontal">
+            <Button Name="MoveButton" Classes="Normal" Classes.CancelState="{Binding IsCopyingFiles}" Click="MoveDifference" Width="100"/>
+            <Button Classes="Normal LoadButton" Classes.SaveButton="{Binding IsCopyingFiles}" Width="35" Click="LoadSaveButtonClicked">
+              <ToolTip.Tip>
+                <TextBlock Name="LoadButtonTipText" Classes.Light="{Binding IsLightTheme}" Text="Load a saved copying file to continue copying"/>
+              </ToolTip.Tip>
+              <Image Classes="LoadImage" Classes.SaveImage="{Binding IsCopyingFiles}" HorizontalAlignment="Center" 
+                     VerticalAlignment="Center"/>
+            </Button>
+          </StackPanel>
         </StackPanel>
       </StackPanel>
       <Rectangle HorizontalAlignment="Left" Width="{Binding ProgressWidth}"  Fill="{StaticResource MainGradient}" Height="10"/>

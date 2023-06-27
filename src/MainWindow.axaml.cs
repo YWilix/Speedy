@@ -8,30 +8,42 @@ using Speedy.Scripts.Main;
 using System.Threading.Tasks;
 using System.Threading;
 using Speedy.Windows;
-using Avalonia;
 using System;
+using Speedy.Scripts.Data;
+using Avalonia.Media.Imaging;
+using Avalonia.Media;
 
 namespace Speedy;
 
 public partial class MainWindow : Window
 {
     private BaseWindowDataContext _DataContext;
-    private bool? IsAnswerFromMessageYes = null;  
+    private bool? IsAnswerFromMessageYes = null;
 
-    private Task MovingFiles = null;
+    private string workingfile = Environment.CurrentDirectory + @"\SpeedyData\LastCopyingData.scd";
+    private CopyingData WorkingData;//the data we are moving
+
+    public bool IsLightTheme = true;
 
     /// <summary>
     /// Used to cancel files copying
     /// </summary>
-    private CancellationTokenSource CancelTokenSource = new CancellationTokenSource();
+    private CancellationTokenSource PauseTokenSource = new CancellationTokenSource();
 
     public MainWindow()
     {
         InitializeComponent();
         _DataContext = new BaseWindowDataContext();
         ThemeController.OnThemeChanged += _DataContext.ThemeChanged;
+        _DataContext.PropertyChanged += PropertyChanged;//a function that handles some other changes when some property changes
         DataContext = _DataContext;
+        var SavedTheme = SavingSys.LoadTheme();
+        if (SavedTheme != null)
+            ThemeController.MainTheme = (bool)SavedTheme ? Avalonia.Themes.Fluent.FluentThemeMode.Light : Avalonia.Themes.Fluent.FluentThemeMode.Dark;
+        LoadLastCopyData();//loads the last paused copy data if exists
     }
+
+    //Event Handlers :
 
     public void MoveWindow(object sender ,PointerPressedEventArgs args )
     {
@@ -41,19 +53,45 @@ public partial class MainWindow : Window
     public void ChangeTheme(object sender , RoutedEventArgs args)
     {
         ThemeController.MainTheme = _DataContext.IsLightTheme ? Avalonia.Themes.Fluent.FluentThemeMode.Dark : Avalonia.Themes.Fluent.FluentThemeMode.Light;
+        SavingSys.SaveTheme();
     }
 
     public async void MoveDifference(object sender , RoutedEventArgs args)
     {
         if (MoveButton.Content == "Cancel") // Cancels the Files copying
         {
-            CancelTokenSource.Cancel(true);
-            MoveButton.Content = "Move";
+            SetPaused(true);
+
+            //Asking if the user is sure to cancel
+            var MsgDialogue = new MessageDialog(MessageDialogueType.YesNo, "Are you sure ?",
+            "Are you sure you want to cancel ?\nit's advisable to save the copying data before cancelling so you can continue again later");
+            MsgDialogue.NoEvent += () => { IsAnswerFromMessageYes = false; };
+            MsgDialogue.YesEvent += () => { IsAnswerFromMessageYes = true; };
+
+            await MsgDialogue.ShowDialog(this);
+
+            if (IsAnswerFromMessageYes == false)// Not cancelling
+                return;
+
+            //yes clicked :
+            if (File.Exists(SavingSys.defaultlastworkingfilepath))//deleting the "last working file" file 
+                File.Delete(SavingSys.defaultlastworkingfilepath);
+
+            DeleteDefaultDataFile();//Removing the old copy data file
+            ResetUi();//Resetting the UI
+
             return;
         }
         try //Copying Files
         {
-            CancelTokenSource = new CancellationTokenSource();
+            DeleteDefaultDataFile();//Removing the old copy data file
+
+            SavingSys.ResetLastWorkingFile();//Resetting the "Last working file" file
+
+            //Resetting the main file 
+            workingfile = SavingSys.defaultdatapath;
+
+            PauseTokenSource = new CancellationTokenSource();
 
             string Dest = destinationbox.Text;//Destination
             string Source = sourcebox.Text;
@@ -74,29 +112,49 @@ public partial class MainWindow : Window
             if (IsAnswerFromMessageYes == false)// Not copying files if the user says no
                 return;
 
+            _DataContext.IsCopyingFiles = true;
+            _DataContext.IsPaused = false;
+
             bool keepdeleted = (bool)KeepDeletedBox.IsChecked;
             bool keeplastver = (bool)LatestVerBox.IsChecked;
 
-            MoveButton.Content = "Cancel";
-
             var width = this.Width;
 
-            MovingFiles = Task.Run(() => SmartCopy.CopyDifference(Source, Dest, keepdeleted, keeplastver,CancelTokenSource.Token, CompletedMoving, _DataContext,width),
-                                   CancelTokenSource.Token);
-            // , Widthv
+            Task.Run(() => SmartCopy.CopyDifference(Source, Dest, keepdeleted, keeplastver, PauseTokenSource.Token, CompletedCopying,PausedMoving,_DataContext, width),
+                                   PauseTokenSource.Token);
         }
-        catch (System.Exception e)
+        catch (Exception e)
         {
-            //Asking if the user is sure to copy the files
+            //an Error has occured
             var MsgDialogue = new MessageDialog(MessageDialogueType.Ok, "ERROR !",e.Message);
 
             await MsgDialogue.ShowDialog(this);
         }
     }
 
-    public void QuitApplication(object sender, RoutedEventArgs args)
+    public async void QuitApplication(object sender, RoutedEventArgs args)
     {
+        SetPaused(true);//Saving the data to the working file
+        string m1 = "Are you sure you want to quit ?\n";
+        string Msg = _DataContext.IsCopyingFiles ? m1 + "don't worry you can continue the copying operation later" : m1;
+        
+        var MsgDialogue = new MessageDialog(MessageDialogueType.YesNo, "Are you sure ?",Msg);
+        MsgDialogue.NoEvent += () => { IsAnswerFromMessageYes = false; };
+        MsgDialogue.YesEvent += () => { IsAnswerFromMessageYes = true; };
+
+        await MsgDialogue.ShowDialog(this);
+
+        if (IsAnswerFromMessageYes == false)// Not copying files if the user says no
+        {
+            SetPaused(false);//Continue the copying
+            return;
+        }
         Environment.Exit(0);
+    }
+
+    public void PauseButtonClicked(object sender , RoutedEventArgs args)
+    {
+        SetPaused(!_DataContext.IsPaused);
     }
 
     public void SelectSourceFolder(object sender, RoutedEventArgs args)
@@ -117,10 +175,232 @@ public partial class MainWindow : Window
         destinationbox.Text = result == null ? destinationbox.Text : result;
     }
 
-    private void CompletedMoving()
+    public async void LoadSaveButtonClicked(object sender, RoutedEventArgs args)
     {
-        MoveButton.Content = "Move";
+        try
+        {
+            if (_DataContext.IsCopyingFiles)//then we want to save
+            {
+                if (workingfile != SavingSys.defaultdatapath)//then the working file is a saved file and not the default one
+                {
+                    //Overwrites the save file with the new data
+                    SetPaused(true);
+                    SetPaused(false);
+                    return;
+                }
+
+                SetPaused(true);//Pausing so the working data is Up to date
+
+                SaveFileDialog saveFileDialog = new SaveFileDialog();
+                var mainfilter = new FileDialogFilter();
+                mainfilter.Name = "Speedy Copying Data(*.scd)";
+                mainfilter.Extensions.Add("scd");
+                saveFileDialog.Filters.Add(mainfilter);
+                saveFileDialog.DefaultExtension = "scd";
+
+                string path = await saveFileDialog.ShowAsync(this);
+
+                if (path == null)
+                {
+                    SetPaused(false);//setting pause to false to continue moving the file
+                    return;
+                }
+
+                SavingSys.SaveCopyingData(WorkingData, path);//saving the data to the path
+                DeleteDefaultDataFile();
+                SavingSys.SaveLastWorkingFile(path);//Saves the last working file as the saved file path 
+                workingfile = path;//Setting the working file to the saved data
+            }
+            else//then we want to load
+            {
+                OpenFileDialog openFileDialog = new OpenFileDialog();
+
+                //making a filter
+                var mainfilter = new FileDialogFilter();
+                mainfilter.Extensions.Add("scd");
+                mainfilter.Name = "Speedy Copying Data (*.scd)";
+                openFileDialog.Filters.Add(mainfilter);
+
+                openFileDialog.Title = "Load a Speedy Copying Data"; 
+                openFileDialog.AllowMultiple = false;
+
+
+                string? path = (await openFileDialog.ShowAsync(this))?[0];
+
+                if (path == null)
+                    return;
+
+                DeleteDefaultDataFile();
+                SavingSys.SaveLastWorkingFile(path);//Saves the last working file as the loaded file path 
+
+                //setting the mainworkingfile so if paused again the copying operation save the data to the same file
+                workingfile = path;
+
+                //loading the data
+                var data = SavingSys.LoadCopyingData(path);
+                LoadCopyData(data);
+
+            }
+        }
+        catch(Exception e){
+            //An Error has occured
+            var MsgDialogue = new MessageDialog(MessageDialogueType.Ok, "ERROR !", e.Message);
+
+            await MsgDialogue.ShowDialog(this);
+        }
+    }
+
+    //Other methods :
+
+    /// <summary>
+    /// Sets the paused value of speedy 
+    /// </summary>
+    private void SetPaused(bool value)
+    {
+        if (!_DataContext.IsCopyingFiles)
+            return;
+
+        if (value)
+            PauseTokenSource.Cancel();
+        else
+        {
+            ContinueCopying(WorkingData);
+        }
+        _DataContext.IsPaused = value;
+    }
+    
+    /// <summary>
+    /// Continues the copying operation according to a Copy data
+    /// </summary>
+    private void ContinueCopying(CopyingData Data)
+    {
+
+        _DataContext.IsCopyingFiles = true;
+        _DataContext.IsPaused = false;
+
+        string source = Data.Source;
+        string dest = Data.Destination;
+        bool keepthenewest = Data.KeepTheNewest;
+        var width = this.Width;
+
+        PauseTokenSource = new CancellationTokenSource();
+
+        //Continue the copying operation where it stopped
+        if (Data.PausedOnDelete)
+            Task.Run(() => SmartCopy.CopyDifference(source,dest, !Data.PausedOnDelete, keepthenewest, PauseTokenSource.Token, CompletedCopying,PausedMoving, _DataContext, width),
+                       PauseTokenSource.Token);
+        else
+            Task.Run(() => SmartCopy.CopyDifference(source, dest,true, keepthenewest, PauseTokenSource.Token, CompletedCopying, PausedMoving, _DataContext, width,Data),
+            PauseTokenSource.Token);
+    }
+
+    /// <summary>
+    /// Loads the last copy data speedy was working on (the method also setup the Ui)
+    /// </summary>
+    private void LoadLastCopyData()
+    {
+        if (!File.Exists(SavingSys.defaultlastworkingfilepath))
+            return;
+
+        string path = SavingSys.LoadLastWorkingFile();
+
+        if (!File.Exists(path))//Can't load the last copy data because it doesn't exist
+            return;
+        
+        workingfile = path;
+
+        CopyingData data = SavingSys.LoadCopyingData(path);
+
+        LoadCopyData(data);//loads the last copy data
+    }
+
+    /// <summary>
+    /// Loads a specific copy data (the method also setup the Ui)
+    /// </summary>
+    private void LoadCopyData(CopyingData data)
+    {
+        SetUi(data);
+
+        _DataContext.IsCopyingFiles = true;
+        _DataContext.IsPaused = true;
+
+        WorkingData = data;//setting the data we are working on
+    }
+
+    /// <summary>
+    /// does the setup of the ui according to a data object
+    /// </summary>
+    /// <param name="Data">the data</param>
+    private void SetUi(CopyingData Data)
+    {
+        if (Data == null)
+            throw new Exception("SETUP DATA IS NULL");
+
+        sourcebox.Text = Data.Source;
+        destinationbox.Text = Data.Destination;
+
+        KeepDeletedBox.IsChecked = Data.KeepDeleted;
+        LatestVerBox.IsChecked = Data.KeepTheNewest;
+
+        _DataContext.ProgressWidth = Data.LastProgressBarWidth;
+    }
+    /// <summary>
+    /// Resets the progress bar and the entire Ui to be usable again
+    /// </summary>
+    private void ResetUi()
+    {
+        _DataContext.IsCopyingFiles = false;
+        _DataContext.IsPaused = true;
         _DataContext.ProgressWidth = 0;
+    }
+
+    /// <summary>
+    /// Deletes the default copy data file
+    /// </summary>
+    private void DeleteDefaultDataFile()
+    {
+        if (File.Exists(SavingSys.defaultdatapath))
+            File.Delete(SavingSys.defaultdatapath);
+    }
+    /// <summary>
+    /// Deletes the working copy data file
+    /// </summary>
+    private void DeleteWorkingDataFile()
+    {
+        if (File.Exists(workingfile))
+            File.Delete(workingfile);
+    }
+
+    /// <summary>
+    /// a method that updates the ui when a property changes
+    /// </summary>
+    private void PropertyChanged(object sender , PropertyChangedEventArgs args)
+    {
+        string loadtext = "Load a saved copying file to continue copying";
+        string savetext = "Save a copying file of the current copying operation to continue later ";
+        
+        if (args.PropertyName == nameof(_DataContext.IsCopyingFiles))
+            LoadButtonTipText.Text = _DataContext.IsCopyingFiles ? savetext : loadtext;
+    }
+
+
+    /// <summary>
+    /// Called when the copying operation is completed
+    /// </summary>
+    private void CompletedCopying()
+    {
+        ResetUi();
+        DeleteWorkingDataFile();//deletes the working file so it doesn't make confusion for the user
+        //(he can reload it again thiking he didn't complete the copying process)
+    }
+    /// <summary>
+    /// Called when the copying operation is paused
+    /// </summary>
+    private void PausedMoving(CopyingData Data)
+    {
+        //Saves the copying data
+        SavingSys.SaveCopyingData(Data, workingfile);
+        WorkingData = Data;
     }
 }
 
@@ -129,6 +409,36 @@ public class BaseWindowDataContext : INotifyPropertyChanged
     public event PropertyChangedEventHandler? PropertyChanged;
 
     public bool IsLightTheme => ThemeController.MainTheme == Avalonia.Themes.Fluent.FluentThemeMode.Light;
+
+    public bool IsPaused
+    {
+        get
+        {
+            return _IsPaused;
+        }
+        set 
+        {
+            _IsPaused = value;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsPaused)));
+        }
+    }
+
+    public bool IsCopyingFiles
+    {
+        get
+        {
+            return _IsCopyingFiles;
+        }
+        set
+        {
+            _IsCopyingFiles = value;
+            PropertyChanged?.Invoke(this , new PropertyChangedEventArgs(nameof(IsCopyingFiles)));
+        }
+    }
+
+    private bool _IsCopyingFiles = false;
+
+    private bool _IsPaused = true;
 
     public double ProgressWidth
     {
