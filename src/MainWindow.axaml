@@ -40,6 +40,11 @@
     <Style Selector="TextBlock#Percentage.Light">
       <Setter Property="Foreground" Value="{StaticResource GeneralBlue2}"/>
     </Style>
+
+    <Style Selector="ToolTip">
+      <Setter Property="Background" Value="{Binding #UpperBorder.Background}"/>
+    </Style>
+
   </Window.Styles>
   
   <Border Classes.Light="{Binding IsLightTheme}" Classes="ThemeBorder" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
