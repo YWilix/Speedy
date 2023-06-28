@@ -1,5 +1,4 @@
 ﻿using Avalonia;
-using Speedy.Windows;
 using System;
 
 namespace Speedy;
