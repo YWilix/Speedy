@@ -20,7 +20,7 @@
     </Style>
 
     <Style Selector="Button#MoveButton">
-     <Setter Property="Content" Value="Move"/>
+     <Setter Property="Content" Value="Copy"/>
     </Style>
 
     <Style Selector="Button#MoveButton.CancelState">

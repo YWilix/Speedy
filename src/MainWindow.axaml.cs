@@ -183,17 +183,21 @@ public partial class MainWindow : Window
         {
             if (_DataContext.IsCopyingFiles)//then we want to save
             {
+                bool paused = _DataContext.IsPaused;
+
                 if (workingfile != SavingSys.defaultdatapath)//then the working file is a saved file and not the default one
                 {
                     //Overwrites the save file with the new data
                     SetPaused(true);
-                    SetPaused(false);
+                    SetPaused(paused);
                     return;
                 }
 
                 SetPaused(true);//Pausing so the working data is Up to date
 
                 SaveFileDialog saveFileDialog = new SaveFileDialog();
+                saveFileDialog.Title = "Save a Speedy Copying Data";
+                
                 var mainfilter = new FileDialogFilter();
                 mainfilter.Name = "Speedy Copying Data(*.scd)";
                 mainfilter.Extensions.Add("scd");
@@ -204,7 +208,7 @@ public partial class MainWindow : Window
 
                 if (path == null)
                 {
-                    SetPaused(false);//setting pause to false to continue moving the file
+                    SetPaused(paused);//setting pause to false to continue moving the file
                     return;
                 }
 
