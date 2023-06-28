@@ -17,6 +17,9 @@
 
     <SolidColorBrush x:Key="PointerOver" Color="#ffffff10" Opacity="0.1"/>
 
+    <SolidColorBrush x:Key="GeneralBlue" Color="#39c6f4"/>
+    <SolidColorBrush x:Key="GeneralBlue2" Color="#35479d"/>
+    
     <!-- Dark Theme -->
 
     <SolidColorBrush x:Key="DarkBackgColor" Color="#28283b" Opacity="0.96"/>
