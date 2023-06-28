@@ -43,6 +43,7 @@ public partial class MainWindow : Window
         ThemeController.OnThemeChanged += _DataContext.ThemeChanged;
         _DataContext.PropertyChanged += PropertyChanged;//a function that handles some other changes when some property changes
         DataContext = _DataContext;
+        _DataContext.MaxWidth = this.Width;
         var SavedTheme = SavingSys.LoadTheme();
         if (SavedTheme != null)
             ThemeController.MainTheme = (bool)SavedTheme ? Avalonia.Themes.Fluent.FluentThemeMode.Light : Avalonia.Themes.Fluent.FluentThemeMode.Dark;
@@ -483,11 +484,28 @@ public class BaseWindowDataContext : INotifyPropertyChanged
         set
         {
             _ProgressWidth = value;
+            Percentage = (int)Math.Floor((_ProgressWidth / MaxWidth)*100);
             PropertyChanged?.Invoke(this , new PropertyChangedEventArgs(nameof(ProgressWidth)));
         }
     }
 
     private double _ProgressWidth;
+
+    public string PercentageText => Percentage.ToString() + "%";
+
+    private int Percentage
+    {
+        get { return _Percentage; }
+        set
+        {
+            _Percentage = value;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(PercentageText)));
+        }
+    }
+
+    private int _Percentage = 0;
+
+    public double MaxWidth;
 
     public void ThemeChanged()
     {

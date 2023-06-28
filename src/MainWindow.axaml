@@ -26,6 +26,20 @@
     <Style Selector="Button#MoveButton.CancelState">
       <Setter Property="Content" Value="Cancel"/>
     </Style>
+
+    <Style Selector="TextBlock#Dev">
+      <Setter Property="Foreground" Value="White"/>
+    </Style>
+    <Style Selector="TextBlock#Dev.Light">
+      <Setter Property="Foreground" Value="Black"/>
+    </Style>
+
+    <Style Selector="TextBlock#Percentage">
+      <Setter Property="Foreground" Value="{StaticResource GeneralBlue}"/>
+    </Style>
+    <Style Selector="TextBlock#Percentage.Light">
+      <Setter Property="Foreground" Value="{StaticResource GeneralBlue2}"/>
+    </Style>
   </Window.Styles>
   
   <Border Classes.Light="{Binding IsLightTheme}" Classes="ThemeBorder" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
@@ -92,6 +106,14 @@
             </Button>
           </StackPanel>
         </StackPanel>
+        <Panel>
+          <Panel.RenderTransform>
+            <TranslateTransform Y="-4"/>
+          </Panel.RenderTransform>
+          <TextBlock Name="Dev" Classes.Light="{Binding IsLightTheme}" Text="by Wilix" HorizontalAlignment="Center"  FontSize="9" Opacity="0.4"/>
+          <TextBlock Name="Percentage" Classes.Light="{Binding IsLightTheme}" HorizontalAlignment="Right" Margin="0,0,11,0" 
+                     Text="{Binding PercentageText}" IsVisible="{Binding IsCopyingFiles}" FontSize="12"/>
+        </Panel>
       </StackPanel>
       <Rectangle HorizontalAlignment="Left" Width="{Binding ProgressWidth}"  Fill="{StaticResource MainGradient}" Height="10"/>
     </StackPanel>
