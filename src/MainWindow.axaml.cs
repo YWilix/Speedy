@@ -13,6 +13,12 @@ using Speedy.Scripts.Data;
 using Avalonia.Media.Imaging;
 using Avalonia.Media;
 
+//using Rs = Speedy.Properties;//The Resources Namespace
+using SysDraw = System.Drawing;
+using SkiaSharp;
+using Avalonia.Platform;
+using Avalonia;
+
 namespace Speedy;
 
 public partial class MainWindow : Window
@@ -63,10 +69,8 @@ public partial class MainWindow : Window
             SetPaused(true);
 
             //Asking if the user is sure to cancel
-            var MsgDialogue = new MessageDialog(MessageDialogueType.YesNo, "Are you sure ?",
+            var MsgDialogue = MessageDialogInCenter(MessageDialogueType.YesNo, "Are you sure ?",
             "Are you sure you want to cancel ?\nit's advisable to save the copying data before cancelling so you can continue again later");
-            MsgDialogue.NoEvent += () => { IsAnswerFromMessageYes = false; };
-            MsgDialogue.YesEvent += () => { IsAnswerFromMessageYes = true; };
 
             await MsgDialogue.ShowDialog(this);
 
@@ -88,9 +92,6 @@ public partial class MainWindow : Window
 
             SavingSys.ResetLastWorkingFile();//Resetting the "Last working file" file
 
-            //Resetting the main file 
-            workingfile = SavingSys.defaultdatapath;
-
             PauseTokenSource = new CancellationTokenSource();
 
             string Dest = destinationbox.Text;//Destination
@@ -101,11 +102,12 @@ public partial class MainWindow : Window
             if (!Directory.Exists(Dest))
                 throw new DirectoryNotFoundException("The destination directory you indicated doesn't exist !");
 
+            //Resetting the main file 
+            workingfile = SavingSys.defaultdatapath;
+
             //Asking if the user is sure to copy the files
-            var MsgDialogue = new MessageDialog(MessageDialogueType.YesNo , "Are you sure ?" ,
+            var MsgDialogue = MessageDialogInCenter(MessageDialogueType.YesNo, "Are you sure ?",
             "Are you sure you want to move files ?\nOnce started you can cancel but the files that are copied won't go back");
-            MsgDialogue.NoEvent += () => { IsAnswerFromMessageYes = false; };
-            MsgDialogue.YesEvent += () => { IsAnswerFromMessageYes = true; };
 
             await MsgDialogue.ShowDialog(this);
 
@@ -126,7 +128,7 @@ public partial class MainWindow : Window
         catch (Exception e)
         {
             //an Error has occured
-            var MsgDialogue = new MessageDialog(MessageDialogueType.Ok, "ERROR !",e.Message);
+            var MsgDialogue = MessageDialogInCenter(MessageDialogueType.Ok, "ERROR !", e.Message);
 
             await MsgDialogue.ShowDialog(this);
         }
@@ -134,19 +136,18 @@ public partial class MainWindow : Window
 
     public async void QuitApplication(object sender, RoutedEventArgs args)
     {
+        bool paused = _DataContext.IsPaused;
         SetPaused(true);//Saving the data to the working file
         string m1 = "Are you sure you want to quit ?\n";
         string Msg = _DataContext.IsCopyingFiles ? m1 + "don't worry you can continue the copying operation later" : m1;
-        
-        var MsgDialogue = new MessageDialog(MessageDialogueType.YesNo, "Are you sure ?",Msg);
-        MsgDialogue.NoEvent += () => { IsAnswerFromMessageYes = false; };
-        MsgDialogue.YesEvent += () => { IsAnswerFromMessageYes = true; };
+
+        var MsgDialogue = MessageDialogInCenter(MessageDialogueType.YesNo, "Are you sure ?", Msg);
 
         await MsgDialogue.ShowDialog(this);
 
         if (IsAnswerFromMessageYes == false)// Not copying files if the user says no
         {
-            SetPaused(false);//Continue the copying
+            SetPaused(paused);//Continue the copying
             return;
         }
         Environment.Exit(0);
@@ -230,21 +231,22 @@ public partial class MainWindow : Window
                 if (path == null)
                     return;
 
-                DeleteDefaultDataFile();
-                SavingSys.SaveLastWorkingFile(path);//Saves the last working file as the loaded file path 
-
-                //setting the mainworkingfile so if paused again the copying operation save the data to the same file
-                workingfile = path;
-
                 //loading the data
                 var data = SavingSys.LoadCopyingData(path);
-                LoadCopyData(data);
+                await LoadCopyData(data);
 
+                if (_DataContext.IsCopyingFiles)// if the system is copying files then LoadCopyData didn't encounter any errors
+                {
+                    DeleteDefaultDataFile();
+                    SavingSys.SaveLastWorkingFile(path);//Saves the last working file as the loaded file path 
+                    workingfile = path;
+                }
+                //setting the mainworkingfile so if paused again the copying operation save the data to the same file
             }
         }
         catch(Exception e){
             //An Error has occured
-            var MsgDialogue = new MessageDialog(MessageDialogueType.Ok, "ERROR !", e.Message);
+            var MsgDialogue = MessageDialogInCenter(MessageDialogueType.Ok, "ERROR !", e.Message);
 
             await MsgDialogue.ShowDialog(this);
         }
@@ -297,7 +299,7 @@ public partial class MainWindow : Window
     /// <summary>
     /// Loads the last copy data speedy was working on (the method also setup the Ui)
     /// </summary>
-    private void LoadLastCopyData()
+    private async Task LoadLastCopyData()
     {
         if (!File.Exists(SavingSys.defaultlastworkingfilepath))
             return;
@@ -306,19 +308,36 @@ public partial class MainWindow : Window
 
         if (!File.Exists(path))//Can't load the last copy data because it doesn't exist
             return;
-        
-        workingfile = path;
 
         CopyingData data = SavingSys.LoadCopyingData(path);
 
-        LoadCopyData(data);//loads the last copy data
+        await LoadCopyData(data, false);//loads the last copy data
+
+
+        if (_DataContext.IsCopyingFiles)// if the system is copying files then LoadCopyData didn't encounter any errors
+            workingfile = path;
     }
 
     /// <summary>
     /// Loads a specific copy data (the method also setup the Ui)
     /// </summary>
-    private void LoadCopyData(CopyingData data)
+    private async Task LoadCopyData(CopyingData data , bool LogErrors = true)
     {
+        if (LogErrors && !Directory.Exists(data.Source))
+        {
+            var MsgDialouge = MessageDialogInCenter(MessageDialogueType.Ok, "Error", "The source directory of the loaded data doesn't exist anymore !");
+            await MsgDialouge.ShowDialog(this);
+            return;
+        }
+        if (LogErrors && !Directory.Exists(data.Destination))
+        {
+            var MsgDialouge = MessageDialogInCenter(MessageDialogueType.Ok, "Error", "The destination directory of the loaded data doesn't exist anymore !");
+            await MsgDialouge.ShowDialog(this);
+            return;
+        }
+        if (!LogErrors && (!Directory.Exists(data.Destination) || !Directory.Exists(data.Source)))
+            return;
+
         SetUi(data);
 
         _DataContext.IsCopyingFiles = true;
@@ -326,6 +345,8 @@ public partial class MainWindow : Window
 
         WorkingData = data;//setting the data we are working on
     }
+
+    //Ui related methods :
 
     /// <summary>
     /// does the setup of the ui according to a data object
@@ -353,6 +374,19 @@ public partial class MainWindow : Window
         _DataContext.IsPaused = true;
         _DataContext.ProgressWidth = 0;
     }
+
+    /// <summary>
+    /// Creates a useful message dialogue instance
+    /// </summary>
+    private MessageDialog MessageDialogInCenter(MessageDialogueType DialogType, string title = "", string text = "")
+    {
+        var MsgDialogue = new MessageDialog(DialogType, title,text);
+        MsgDialogue.NoEvent += () => { IsAnswerFromMessageYes = false; };
+        MsgDialogue.YesEvent += () => { IsAnswerFromMessageYes = true; };
+
+        return MsgDialogue;
+    }
+
 
     /// <summary>
     /// Deletes the default copy data file
