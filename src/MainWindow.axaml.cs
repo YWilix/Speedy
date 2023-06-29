@@ -18,6 +18,7 @@ using SysDraw = System.Drawing;
 using SkiaSharp;
 using Avalonia.Platform;
 using Avalonia;
+using Avalonia.OpenGL;
 
 namespace Speedy;
 
@@ -283,6 +284,19 @@ public partial class MainWindow : Window
     /// </summary>
     private void ContinueCopying(CopyingData Data)
     {
+        if (!Directory.Exists(Data.Source))
+        {
+            var MsgDialouge = MessageDialogInCenter(MessageDialogueType.Ok, "Error", "The source directory of the current data doesn't exist anymore !");
+            MsgDialouge.ShowDialog(this);
+            return;
+        }
+        if (Directory.Exists(Data.Destination))
+        {
+            var MsgDialouge = MessageDialogInCenter(MessageDialogueType.Ok, "Error", "The destination directory of the current data doesn't exist anymore !");
+            MsgDialouge.ShowDialog(this);
+            return;
+        }
+
 
         _DataContext.IsCopyingFiles = true;
         _DataContext.IsPaused = false;
