@@ -183,15 +183,17 @@ public partial class MainWindow : Window
         {
             if (_DataContext.IsCopyingFiles)//then we want to save
             {
-                bool paused = _DataContext.IsPaused;
 
                 if (workingfile != SavingSys.defaultdatapath)//then the working file is a saved file and not the default one
                 {
                     //Overwrites the save file with the new data
                     SetPaused(true);
-                    SetPaused(paused);
+                    Thread ShowThatSaved = new Thread(ShowSaved);
+                    ShowThatSaved.Start();
                     return;
                 }
+
+                bool paused = _DataContext.IsPaused;
 
                 SetPaused(true);//Pausing so the working data is Up to date
 
@@ -381,6 +383,20 @@ public partial class MainWindow : Window
     }
 
     /// <summary>
+    /// Shows the saved indicator text if it isn't already shown
+    /// </summary>
+    private void ShowSaved()
+    {
+        if (_DataContext.Saved)
+            return;
+
+        //Sets Saved to true for some time to show that the copying data has saved
+        _DataContext.Saved = true;
+        Thread.Sleep(1200);
+        _DataContext.Saved = false;
+    }
+
+    /// <summary>
     /// Creates a useful message dialogue instance
     /// </summary>
     private MessageDialog MessageDialogInCenter(MessageDialogueType DialogType, string title = "", string text = "")
@@ -508,6 +524,18 @@ public class BaseWindowDataContext : INotifyPropertyChanged
     }
 
     private int _Percentage = 0;
+
+    public bool Saved
+    {
+        get { return _Saved; }
+        set
+        {
+            _Saved = value;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Saved)));
+        }
+    }
+
+    private bool _Saved = false;
 
     public double MaxWidth;
 

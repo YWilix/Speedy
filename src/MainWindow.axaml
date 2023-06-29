@@ -34,10 +34,10 @@
       <Setter Property="Foreground" Value="Black"/>
     </Style>
 
-    <Style Selector="TextBlock#Percentage">
+    <Style Selector="TextBlock.InfoText">
       <Setter Property="Foreground" Value="{StaticResource GeneralBlue}"/>
     </Style>
-    <Style Selector="TextBlock#Percentage.Light">
+    <Style Selector="TextBlock.InfoText.Light">
       <Setter Property="Foreground" Value="{StaticResource GeneralBlue2}"/>
     </Style>
 
@@ -115,8 +115,9 @@
           <Panel.RenderTransform>
             <TranslateTransform Y="-4"/>
           </Panel.RenderTransform>
+          <TextBlock Classes="InfoText" Classes.Light="{Binding IsLightTheme}" IsVisible="{Binding Saved}" Margin="11,1,0,0" Text="Saved" FontSize="10"/> 
           <TextBlock Name="Dev" Classes.Light="{Binding IsLightTheme}" Text="by Wilix" HorizontalAlignment="Center"  FontSize="9" Opacity="0.4"/>
-          <TextBlock Name="Percentage" Classes.Light="{Binding IsLightTheme}" HorizontalAlignment="Right" Margin="0,0,11,0" 
+          <TextBlock Classes="InfoText" Classes.Light="{Binding IsLightTheme}" HorizontalAlignment="Right" Margin="0,0,11,0" 
                      Text="{Binding PercentageText}" IsVisible="{Binding IsCopyingFiles}" FontSize="12"/>
         </Panel>
       </StackPanel>
