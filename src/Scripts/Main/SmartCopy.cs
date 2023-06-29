@@ -54,6 +54,12 @@ namespace Speedy.Scripts.Main
                 else
                     LastState.KeepDeleted = Data.KeepDeleted;
 
+                var sourcetime = Directory.GetLastWriteTime(From);
+                LastState.SourceLastWriteTime = sourcetime;
+
+                var destinationtime = Directory.GetLastWriteTime(To);
+                LastState.DestinationLastWriteTime = destinationtime;
+
                 if (ToDoWhenPause != null)
                     ToDoWhenPause(LastState);
                 ispause = true;

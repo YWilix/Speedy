@@ -344,6 +344,7 @@ public partial class MainWindow : Window
     /// </summary>
     private async Task LoadCopyData(CopyingData data , bool LogErrors = true)
     {
+        //Existence Errors :
         if (LogErrors && !Directory.Exists(data.Source))
         {
             var MsgDialouge = MessageDialogInCenter(MessageDialogueType.Ok, "Error", "The source directory of the loaded data doesn't exist anymore !");
@@ -358,6 +359,25 @@ public partial class MainWindow : Window
         }
         if (!LogErrors && (!Directory.Exists(data.Destination) || !Directory.Exists(data.Source)))
             return;
+
+        //Directory Modified Errors :
+        string Last = LogErrors ? "" : "Last ";
+
+        var sourcetime = Directory.GetLastWriteTime(data.Source);
+        if(sourcetime != data.SourceLastWriteTime)
+        {
+            var MsgDialouge = MessageDialogInCenter(MessageDialogueType.Ok, "Error", $"The source directory of the data has been modified , can't continue the {Last}copying !\nYou can restart the copying if you want");
+            await MsgDialouge.ShowDialog(this);
+            return;
+        }
+
+        var destinationtime = Directory.GetLastWriteTime(data.Destination);
+        if (destinationtime != data.DestinationLastWriteTime)
+        {
+            var MsgDialouge = MessageDialogInCenter(MessageDialogueType.Ok, "Error", $"The destination directory of the data has been modified , can't continue the {Last}copying !\nYou can restart the copying if you want");
+            await MsgDialouge.ShowDialog(this);
+            return;
+        }
 
         SetUi(data);
 
