@@ -10,7 +10,7 @@
   
     > It does that by only copying the modified files to the destination without the need to recopy everything like most operating systems .
 
-+ Speedy gives you the ability to ***pause the copying operation*** . you can **close the application** (even the computer !) and **continue the copying later** whenever you want to .
++ Speedy gives you the ability to ***pause the copying operation*** . you can **close the application** (even the computer!) and **continue the copying later** whenever you want to .
 
 + Also Speedy gives you the ability to ***save the state of your copying*** operation so you can **load it later to continue copying** . This seems a lot like the pause feature but it gives you an additional ability . The ability to **cancel the copying operation** , **copy some other more important things** and **load the copying state you saved** whenever you want to complete the operation
 
