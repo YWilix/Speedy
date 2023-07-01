@@ -42,3 +42,7 @@ Speedy is a ***desktop cross-platform application*** meaning it works on most op
 + **Debian 9 (Stretch) and higher**
 + **Ubuntu 16.04 and higher**
 + **Fedora 30 and higher**
+
+## :heavy_check_mark: Download Speedy :
+
+You can find **the latest version** of Speedy [**Here**](https://github.com/YWilix/Speedy/releases/latest)
