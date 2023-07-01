@@ -290,7 +290,7 @@ public partial class MainWindow : Window
             MsgDialouge.ShowDialog(this);
             return;
         }
-        if (Directory.Exists(Data.Destination))
+        if (!Directory.Exists(Data.Destination))
         {
             var MsgDialouge = MessageDialogInCenter(MessageDialogueType.Ok, "Error", "The destination directory of the current data doesn't exist anymore !");
             MsgDialouge.ShowDialog(this);
