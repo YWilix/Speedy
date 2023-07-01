@@ -2,7 +2,7 @@
 
 **Speedy** is a ***desktop cross-platform*** application developed using **C#** and **Avalonia Ui** that offers you a **lot of useful features when copying files**
 
-![SpeedyWallpaper](https://github.com/YWilix/Speedy/assets/87858497/b3e7a692-d140-42d0-86bc-4cbec277467e)
+![SpeedyWallpaper](https://github.com/YWilix/Speedy/assets/87858497/9f2c7df5-3481-4b90-8e25-67037d1636ac)
 
 ## :gear: Features :
 
@@ -20,7 +20,7 @@
      
 ### :wrench: Parameters :
 
-![SpeedyWindow_ShowingParams](https://github.com/YWilix/Speedy/assets/87858497/c3dbec14-5d9d-44c1-a0cc-f74c520fa403)
+![SpeedyWindow_ShowingParams](https://github.com/YWilix/Speedy/assets/87858497/10877527-be76-4327-a10d-8492f292d2f0)
 
 + Speedy gives you **2 parametres** controlling the behaviour of the copying operation :
      
