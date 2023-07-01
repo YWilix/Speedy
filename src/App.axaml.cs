@@ -1,7 +1,8 @@
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
-using Speedy.Windows;
+using System;
+using System.IO;
 
 namespace Speedy;
 
@@ -9,9 +10,12 @@ public partial class App : Application
 {
     public override void Initialize()
     {
+        Directory.CreateDirectory(Environment.CurrentDirectory + @"\SpeedyData\");
         AvaloniaXamlLoader.Load(this);
     }
 
+    
+    
     public override void OnFrameworkInitializationCompleted()
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
@@ -21,4 +25,5 @@ public partial class App : Application
 
         base.OnFrameworkInitializationCompleted();
     }
+
 }
