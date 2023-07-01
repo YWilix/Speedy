@@ -276,7 +276,6 @@ public partial class MainWindow : Window
         {
             ContinueCopying(WorkingData);
         }
-        _DataContext.IsPaused = value;
     }
     
     /// <summary>
@@ -490,6 +489,7 @@ public partial class MainWindow : Window
         //Saves the copying data
         SavingSys.SaveCopyingData(Data, workingfile);
         WorkingData = Data;
+        _DataContext.IsPaused = true;
     }
 }
 
