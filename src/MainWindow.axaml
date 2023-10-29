@@ -91,10 +91,10 @@
         </StackPanel>
         
         <StackPanel HorizontalAlignment="Center" Spacing="2">
-          <CheckBox Name="KeepDeletedBox" Classes.Light="{Binding IsLightTheme}" IsEnabled="{Binding !IsCopyingFiles}" Content="Keep deleted files in destination" HorizontalAlignment="Center"
-                    Margin="-14,0,0,0"/>
-          <CheckBox Name="LatestVerBox" Classes.Light="{Binding IsLightTheme}" IsEnabled="{Binding !IsCopyingFiles}" Content="Always choose latest version of files" HorizontalAlignment="Center"
-                    Margin="14,0,0,0"/>
+          <CheckBox Name="KeepDeletedBox" Classes.Light="{Binding IsLightTheme}" Content="Remove deleted files in destination" HorizontalAlignment="Center"
+                    Margin="-4.5,0,0,0"/>
+          <CheckBox Name="LatestVerBox" Classes.Light="{Binding IsLightTheme}" Content="Always choose latest version of files" HorizontalAlignment="Center"
+                    Margin="4,0,0,0"/>
         </StackPanel>
         
         <StackPanel HorizontalAlignment="Center" Orientation="Horizontal" Spacing="15">

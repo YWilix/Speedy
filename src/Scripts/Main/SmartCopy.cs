@@ -18,8 +18,8 @@ namespace Speedy.Scripts.Main
         /// </summary>
         /// <param name="From">the source direcrtory</param>
         /// <param name="To">the destination direcrtory</param>
-        /// <param name="KeepDeleted">
-        /// indicates if we should keep the files that are present in the destination directory but not the source direcotory
+        /// <param name="DeleteAdditionalFiles">
+        /// indicates if we should delete the files that are present in the destination directory but not the source directory
         /// </param>
         /// <param name="KeepTheNewest">
         /// indicates if we should always keep the newest version between the destination and the source file
@@ -28,7 +28,7 @@ namespace Speedy.Scripts.Main
         /// <param name="PauseToken">the Cancelation token that cancels this copying function</param>
         /// <param name="DataContext">The data context of the main window (used to update the progress bar)</param>
         /// <param name="MaxWidth">The Width of the main window (used to update the progress bar)</param> 
-        public static void CopyDifference(string From , string To , bool KeepDeleted , bool KeepTheNewest , CancellationToken PauseToken ,
+        public static void CopyDifference(string From , string To , bool DeleteAdditionalFiles, bool KeepTheNewest , CancellationToken PauseToken ,
                                           Action ToDoWhenComplete = null , Action<CopyingData> ToDoWhenPause = null,BaseWindowDataContext DataContext = null , 
                                           double MaxWidth = 0, CopyingData Data = null)
         {
@@ -36,8 +36,8 @@ namespace Speedy.Scripts.Main
 
             try
             {
-                if (!KeepDeleted)
-                    DeleteDifferenceFiles(From, To, PauseToken,KeepTheNewest);
+                if (DeleteAdditionalFiles)
+                    DeleteDifferenceFiles(From, To, PauseToken, KeepTheNewest);
 
                 var PassedCopyData = (Data != null && !Data.PausedOnDelete) ? Data : null;//The copy data to passe to CopyModifiedFiles function
 
@@ -50,7 +50,7 @@ namespace Speedy.Scripts.Main
 
                 //The KeepDeleted Bool shouldn't change from the first time it's been saved , this code ensures that 
                 if (Data == null)
-                    LastState.KeepDeleted = KeepDeleted;
+                    LastState.KeepDeleted = DeleteAdditionalFiles;
                 else
                     LastState.KeepDeleted = Data.KeepDeleted;
 
