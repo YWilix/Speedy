@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Avalonia.Styling;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
@@ -54,7 +55,7 @@ namespace Speedy.Scripts.Data
         public static void SaveTheme()
         {
             string Path = Environment.CurrentDirectory + @"\SpeedyData\Theme.std"; //the default theme path
-            var CurrentTheme = ThemeController.MainTheme == Avalonia.Themes.Fluent.FluentThemeMode.Light;
+            var CurrentTheme = ThemeController.MainTheme == ThemeVariant.Light;
 
             SaveObj(Path,CurrentTheme);
         }

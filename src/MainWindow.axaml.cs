@@ -1,24 +1,15 @@
 using Avalonia.Controls;
-using System.ComponentModel;
-using Speedy.Scripts;
 using Avalonia.Input;
 using Avalonia.Interactivity;
-using System.IO;
+using Speedy.Scripts;
+using Speedy.Scripts.Data;
 using Speedy.Scripts.Main;
-using System.Threading.Tasks;
-using System.Threading;
 using Speedy.Windows;
 using System;
-using Speedy.Scripts.Data;
-using Avalonia.Media.Imaging;
-using Avalonia.Media;
-
-//using Rs = Speedy.Properties;//The Resources Namespace
-using SysDraw = System.Drawing;
-using SkiaSharp;
-using Avalonia.Platform;
-using Avalonia;
-using Avalonia.OpenGL;
+using System.ComponentModel;
+using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Speedy;
 
@@ -47,24 +38,26 @@ public partial class MainWindow : Window
         _DataContext.MaxWidth = this.Width;
         var SavedTheme = SavingSys.LoadTheme();
         if (SavedTheme != null)
-            ThemeController.MainTheme = (bool)SavedTheme ? Avalonia.Themes.Fluent.FluentThemeMode.Light : Avalonia.Themes.Fluent.FluentThemeMode.Dark;
+            ThemeController.MainTheme = (bool)SavedTheme ? Avalonia.Styling.ThemeVariant.Light : Avalonia.Styling.ThemeVariant.Dark;
         LoadLastCopyData();//loads the last paused copy data if exists
+        var f = new OpenFileDialog();
+
     }
 
     //Event Handlers :
 
-    public void MoveWindow(object sender ,PointerPressedEventArgs args )
+    public void MoveWindow(object sender, PointerPressedEventArgs args)
     {
         BeginMoveDrag(args);
     }
 
-    public void ChangeTheme(object sender , RoutedEventArgs args)
+    public void ChangeTheme(object sender, RoutedEventArgs args)
     {
-        ThemeController.MainTheme = _DataContext.IsLightTheme ? Avalonia.Themes.Fluent.FluentThemeMode.Dark : Avalonia.Themes.Fluent.FluentThemeMode.Light;
+        ThemeController.MainTheme = _DataContext.IsLightTheme ? Avalonia.Styling.ThemeVariant.Dark : Avalonia.Styling.ThemeVariant.Light;
         SavingSys.SaveTheme();
     }
 
-    public async void MoveDifference(object sender , RoutedEventArgs args)
+    public async void MoveDifference(object sender, RoutedEventArgs args)
     {
         if (MoveButton.Content == "Cancel") // Cancels the Files copying
         {
@@ -124,7 +117,7 @@ public partial class MainWindow : Window
 
             var width = this.Width;
 
-            Task.Run(() => SmartCopy.CopyDifference(Source, Dest, keepdeleted, keeplastver, PauseTokenSource.Token, CompletedCopying,PausedMoving,_DataContext, width),
+            Task.Run(() => SmartCopy.CopyDifference(Source, Dest, keepdeleted, keeplastver, PauseTokenSource.Token, CompletedCopying, PausedMoving, _DataContext, width),
                                    PauseTokenSource.Token);
         }
         catch (Exception e)
@@ -155,7 +148,7 @@ public partial class MainWindow : Window
         Environment.Exit(0);
     }
 
-    public void PauseButtonClicked(object sender , RoutedEventArgs args)
+    public void PauseButtonClicked(object sender, RoutedEventArgs args)
     {
         SetPaused(!_DataContext.IsPaused);
     }
@@ -164,7 +157,7 @@ public partial class MainWindow : Window
     {
         OpenFolderDialog fd = new OpenFolderDialog();
         fd.Directory = sourcebox.Text;
-        var t = fd.ShowAsync(this); 
+        var t = fd.ShowAsync(this);
         var result = t.Result;
         sourcebox.Text = result == null ? sourcebox.Text : result;
     }
@@ -200,7 +193,7 @@ public partial class MainWindow : Window
 
                 SaveFileDialog saveFileDialog = new SaveFileDialog();
                 saveFileDialog.Title = "Save a Speedy Copying Data";
-                
+
                 var mainfilter = new FileDialogFilter();
                 mainfilter.Name = "Speedy Copying Data(*.scd)";
                 mainfilter.Extensions.Add("scd");
@@ -230,7 +223,7 @@ public partial class MainWindow : Window
                 mainfilter.Name = "Speedy Copying Data (*.scd)";
                 openFileDialog.Filters.Add(mainfilter);
 
-                openFileDialog.Title = "Load a Speedy Copying Data"; 
+                openFileDialog.Title = "Load a Speedy Copying Data";
                 openFileDialog.AllowMultiple = false;
 
 
@@ -252,7 +245,8 @@ public partial class MainWindow : Window
                 //setting the mainworkingfile so if paused again the copying operation save the data to the same file
             }
         }
-        catch(Exception e){
+        catch (Exception e)
+        {
             //An Error has occured
             var MsgDialogue = MessageDialogInCenter(MessageDialogueType.Ok, "ERROR !", e.Message);
 
@@ -277,7 +271,7 @@ public partial class MainWindow : Window
             ContinueCopying(WorkingData);
         }
     }
-    
+
     /// <summary>
     /// Continues the copying operation according to a Copy data
     /// </summary>
@@ -309,10 +303,10 @@ public partial class MainWindow : Window
 
         //Continue the copying operation where it stopped
         if (Data.PausedOnDelete)
-            Task.Run(() => SmartCopy.CopyDifference(source,dest, !Data.PausedOnDelete, keepthenewest, PauseTokenSource.Token, CompletedCopying,PausedMoving, _DataContext, width),
+            Task.Run(() => SmartCopy.CopyDifference(source, dest, !Data.PausedOnDelete, keepthenewest, PauseTokenSource.Token, CompletedCopying, PausedMoving, _DataContext, width),
                        PauseTokenSource.Token);
         else
-            Task.Run(() => SmartCopy.CopyDifference(source, dest,true, keepthenewest, PauseTokenSource.Token, CompletedCopying, PausedMoving, _DataContext, width,Data),
+            Task.Run(() => SmartCopy.CopyDifference(source, dest, true, keepthenewest, PauseTokenSource.Token, CompletedCopying, PausedMoving, _DataContext, width, Data),
             PauseTokenSource.Token);
     }
 
@@ -341,7 +335,7 @@ public partial class MainWindow : Window
     /// <summary>
     /// Loads a specific copy data (the method also setup the Ui)
     /// </summary>
-    private async Task LoadCopyData(CopyingData data , bool LogErrors = true)
+    private async Task LoadCopyData(CopyingData data, bool LogErrors = true)
     {
         //Existence Errors :
         if (LogErrors && !Directory.Exists(data.Source))
@@ -363,7 +357,7 @@ public partial class MainWindow : Window
         string Last = LogErrors ? "" : "Last ";
 
         var sourcetime = Directory.GetLastWriteTime(data.Source);
-        if(sourcetime != data.SourceLastWriteTime)
+        if (sourcetime != data.SourceLastWriteTime)
         {
             var MsgDialouge = MessageDialogInCenter(MessageDialogueType.Ok, "Error", $"The source directory of the data has been modified , can't continue the {Last}copying !\nYou can restart the copying if you want");
             await MsgDialouge.ShowDialog(this);
@@ -434,7 +428,7 @@ public partial class MainWindow : Window
     /// </summary>
     private MessageDialog MessageDialogInCenter(MessageDialogueType DialogType, string title = "", string text = "")
     {
-        var MsgDialogue = new MessageDialog(DialogType, title,text);
+        var MsgDialogue = new MessageDialog(DialogType, title, text);
         MsgDialogue.NoEvent += () => { IsAnswerFromMessageYes = false; };
         MsgDialogue.YesEvent += () => { IsAnswerFromMessageYes = true; };
 
@@ -462,11 +456,11 @@ public partial class MainWindow : Window
     /// <summary>
     /// a method that updates the ui when a property changes
     /// </summary>
-    private void PropertyChanged(object sender , PropertyChangedEventArgs args)
+    private void PropertyChanged(object sender, PropertyChangedEventArgs args)
     {
         string loadtext = "Load a saved copying file to continue copying";
         string savetext = "Save a copying file of the current copying operation to continue later ";
-        
+
         if (args.PropertyName == nameof(_DataContext.IsCopyingFiles))
             LoadButtonTipText.Text = _DataContext.IsCopyingFiles ? savetext : loadtext;
     }
@@ -497,7 +491,7 @@ public class BaseWindowDataContext : INotifyPropertyChanged
 {
     public event PropertyChangedEventHandler? PropertyChanged;
 
-    public bool IsLightTheme => ThemeController.MainTheme == Avalonia.Themes.Fluent.FluentThemeMode.Light;
+    public bool IsLightTheme => ThemeController.MainTheme == Avalonia.Styling.ThemeVariant.Light;
 
     public bool IsPaused
     {
@@ -505,7 +499,7 @@ public class BaseWindowDataContext : INotifyPropertyChanged
         {
             return _IsPaused;
         }
-        set 
+        set
         {
             _IsPaused = value;
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsPaused)));
@@ -521,7 +515,7 @@ public class BaseWindowDataContext : INotifyPropertyChanged
         set
         {
             _IsCopyingFiles = value;
-            PropertyChanged?.Invoke(this , new PropertyChangedEventArgs(nameof(IsCopyingFiles)));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsCopyingFiles)));
         }
     }
 
@@ -538,8 +532,8 @@ public class BaseWindowDataContext : INotifyPropertyChanged
         set
         {
             _ProgressWidth = value;
-            Percentage = (int)Math.Floor((_ProgressWidth / MaxWidth)*100);
-            PropertyChanged?.Invoke(this , new PropertyChangedEventArgs(nameof(ProgressWidth)));
+            Percentage = (int)Math.Floor((_ProgressWidth / MaxWidth) * 100);
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ProgressWidth)));
         }
     }
 
@@ -575,6 +569,6 @@ public class BaseWindowDataContext : INotifyPropertyChanged
 
     public void ThemeChanged()
     {
-        PropertyChanged?.Invoke(this , new PropertyChangedEventArgs(nameof(IsLightTheme)));
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsLightTheme)));
     }
 }

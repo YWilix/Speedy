@@ -1,6 +1,6 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             x:Class="Speedy.App">
+             x:Class="Speedy.App" RequestedThemeVariant="Light">
 
   <Application.Resources>
     <!-- General Colors -->
@@ -38,8 +38,7 @@
   </Application.Resources>
 
   <Application.Styles>
-        <FluentTheme Mode="Light"/>
-
+    <FluentTheme/>
       <!-- Main styles -->
 
       <!-- General Themes -->

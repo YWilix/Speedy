@@ -1,6 +1,5 @@
-﻿using Avalonia.Themes.Fluent;
-using System;
-
+﻿using System;
+using Avalonia.Styling;
 namespace Speedy.Scripts
 {
     /// <summary>
@@ -11,7 +10,7 @@ namespace Speedy.Scripts
         /// <summary>
         /// The main theme for the app
         /// </summary>
-        public static FluentThemeMode MainTheme 
+        public static ThemeVariant MainTheme 
         { 
             get 
             {
@@ -24,7 +23,7 @@ namespace Speedy.Scripts
             } 
         }
 
-        private static FluentThemeMode _MainTheme = FluentThemeMode.Light;
+        private static ThemeVariant _MainTheme = ThemeVariant.Light;
 
         public static event Action OnThemeChanged;
     }
