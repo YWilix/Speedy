@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Platform.Storage;
 using Speedy.Scripts;
 using Speedy.Scripts.Data;
 using Speedy.Scripts.Main;
@@ -92,11 +93,6 @@ public partial class MainWindow : Window
             string Dest = destinationbox.Text;//Destination
             string Source = sourcebox.Text;
 
-            if (!Directory.Exists(Source))
-                throw new DirectoryNotFoundException("The source directory you indicated doesn't exist !");
-            if (!Directory.Exists(Dest))
-                throw new DirectoryNotFoundException("The destination directory you indicated doesn't exist !");
-
             //Resetting the main file 
             workingfile = SavingSys.defaultdatapath;
 
@@ -117,7 +113,7 @@ public partial class MainWindow : Window
 
             var width = this.Width;
 
-            Task.Run(() => SmartCopy.CopyDifference(Source, Dest, keepdeleted, keeplastver, PauseTokenSource.Token, CompletedCopying, PausedMoving, _DataContext, width),
+            Task.Run(() => SmartCopy.CopyDifference(Source, Dest, keepdeleted, keeplastver, PauseTokenSource.Token, CompletedCopying,AnErrorHappenedWhenCopying, PausedMoving, _DataContext, width),
                                    PauseTokenSource.Token);
         }
         catch (Exception e)
@@ -153,22 +149,54 @@ public partial class MainWindow : Window
         SetPaused(!_DataContext.IsPaused);
     }
 
-    public void SelectSourceFolder(object sender, RoutedEventArgs args)
+    public async void ShowSourceFolderOptions(object sender, RoutedEventArgs args)
     {
-        OpenFolderDialog fd = new OpenFolderDialog();
-        fd.Directory = sourcebox.Text;
-        var t = fd.ShowAsync(this);
-        var result = t.Result;
-        sourcebox.Text = result == null ? sourcebox.Text : result;
+        SourceSelectBt.Flyout.ShowAt(SourceSelectBt);
     }
 
-    public void SelectDestinationFolder(object sender, RoutedEventArgs args)
+    public async void SelectSourceAsAFolder(object sender, RoutedEventArgs args)
     {
-        OpenFolderDialog fd = new OpenFolderDialog();
-        fd.Directory = destinationbox.Text;
-        var t = fd.ShowAsync(this);
-        var result = t.Result;
-        destinationbox.Text = result == null ? destinationbox.Text : result;
+        var FolderPickerOpts = new FolderPickerOpenOptions()
+        {
+            SuggestedStartLocation = await StorageProvider.TryGetFolderFromPathAsync(sourcebox.Text),
+            Title = "Select The Source Folder"
+        };
+
+        var SelectedFolder = await StorageProvider.OpenFolderPickerAsync(FolderPickerOpts);
+        sourcebox.Text = SelectedFolder.Count == 0 ? sourcebox.Text : SelectedFolder[0].Path.LocalPath;
+    }
+
+    public async void SelectSourceAsAFile(object sender, RoutedEventArgs args)
+    {
+        var OpenFileOpts = new FilePickerOpenOptions()
+        {
+            Title = "Select files to move",
+            AllowMultiple = true
+        };
+
+        var result = await StorageProvider.OpenFilePickerAsync(OpenFileOpts);
+
+        if (result.Count == 0)
+            return;
+
+        string Paths = result[0].Path.LocalPath; // a string containning all files paths Seperated by a semicolon ";"
+
+        for (int i = 1; i < result.Count ; i++)//setting up the paths string
+            Paths += ";" + result[i].Path.LocalPath;
+        
+        sourcebox.Text = Paths;
+    }
+
+    public async void SelectDestinationFolder(object sender, RoutedEventArgs args)
+    {
+        var FolderPickerOpts = new FolderPickerOpenOptions()
+        {
+            SuggestedStartLocation = await StorageProvider.TryGetFolderFromPathAsync(destinationbox.Text),
+            Title = "Select The Source Folder"
+        };
+
+        var SelectedFolder = await StorageProvider.OpenFolderPickerAsync(FolderPickerOpts);
+        destinationbox.Text = SelectedFolder.Count == 0 ? destinationbox.Text : SelectedFolder[0].Path.LocalPath;
     }
 
     public async void LoadSaveButtonClicked(object sender, RoutedEventArgs args)
@@ -191,16 +219,14 @@ public partial class MainWindow : Window
 
                 SetPaused(true);//Pausing so the working data is Up to date
 
-                SaveFileDialog saveFileDialog = new SaveFileDialog();
-                saveFileDialog.Title = "Save a Speedy Copying Data";
+                var SaveFileOpts = new FilePickerSaveOptions()
+                {
+                    DefaultExtension = "scd",
+                    Title = "Save a Speedy copying data",
+                    FileTypeChoices = new[] { new FilePickerFileType("Speedy Copying Data (*.scd)") { Patterns = new[] { "*.scd" } } }
+                };
 
-                var mainfilter = new FileDialogFilter();
-                mainfilter.Name = "Speedy Copying Data(*.scd)";
-                mainfilter.Extensions.Add("scd");
-                saveFileDialog.Filters.Add(mainfilter);
-                saveFileDialog.DefaultExtension = "scd";
-
-                string path = await saveFileDialog.ShowAsync(this);
+                string? path = (await StorageProvider.SaveFilePickerAsync(SaveFileOpts)).Path.LocalPath;
 
                 if (path == null)
                 {
@@ -215,19 +241,16 @@ public partial class MainWindow : Window
             }
             else//then we want to load
             {
-                OpenFileDialog openFileDialog = new OpenFileDialog();
 
-                //making a filter
-                var mainfilter = new FileDialogFilter();
-                mainfilter.Extensions.Add("scd");
-                mainfilter.Name = "Speedy Copying Data (*.scd)";
-                openFileDialog.Filters.Add(mainfilter);
+                var OpenFileOpts = new FilePickerOpenOptions()
+                {
+                    Title = "Open a Speedy copying data",
+                    FileTypeFilter = new[] { new FilePickerFileType("Speedy Copying Data (*.scd)") { Patterns = new [] { "*.scd" } } }
+                };
 
-                openFileDialog.Title = "Load a Speedy Copying Data";
-                openFileDialog.AllowMultiple = false;
+                var result = await StorageProvider.OpenFilePickerAsync(OpenFileOpts);
 
-
-                string? path = (await openFileDialog.ShowAsync(this))?[0];
+                string? path = result.Count == 0 ? null : result[0].Path.LocalPath;
 
                 if (path == null)
                     return;
@@ -277,18 +300,6 @@ public partial class MainWindow : Window
     /// </summary>
     private void ContinueCopying(CopyingData Data)
     {
-        if (!Directory.Exists(Data.Source))
-        {
-            var MsgDialouge = MessageDialogInCenter(MessageDialogueType.Ok, "Error", "The source directory of the current data doesn't exist anymore !");
-            MsgDialouge.ShowDialog(this);
-            return;
-        }
-        if (!Directory.Exists(Data.Destination))
-        {
-            var MsgDialouge = MessageDialogInCenter(MessageDialogueType.Ok, "Error", "The destination directory of the current data doesn't exist anymore !");
-            MsgDialouge.ShowDialog(this);
-            return;
-        }
 
 
         _DataContext.IsCopyingFiles = true;
@@ -303,10 +314,10 @@ public partial class MainWindow : Window
 
         //Continue the copying operation where it stopped
         if (Data.PausedOnDelete)
-            Task.Run(() => SmartCopy.CopyDifference(source, dest, !Data.PausedOnDelete, keepthenewest, PauseTokenSource.Token, CompletedCopying, PausedMoving, _DataContext, width),
+            Task.Run(() => SmartCopy.CopyDifference(source, dest, Data.PausedOnDelete, keepthenewest, PauseTokenSource.Token, CompletedCopying,AnErrorHappenedWhenCopying, PausedMoving, _DataContext, width),
                        PauseTokenSource.Token);
         else
-            Task.Run(() => SmartCopy.CopyDifference(source, dest, true, keepthenewest, PauseTokenSource.Token, CompletedCopying, PausedMoving, _DataContext, width, Data),
+            Task.Run(() => SmartCopy.CopyDifference(source, dest, false, keepthenewest, PauseTokenSource.Token, CompletedCopying,AnErrorHappenedWhenCopying, PausedMoving, _DataContext, width, Data),
             PauseTokenSource.Token);
     }
 
@@ -338,39 +349,39 @@ public partial class MainWindow : Window
     private async Task LoadCopyData(CopyingData data, bool LogErrors = true)
     {
         //Existence Errors :
-        if (LogErrors && !Directory.Exists(data.Source))
-        {
-            var MsgDialouge = MessageDialogInCenter(MessageDialogueType.Ok, "Error", "The source directory of the loaded data doesn't exist anymore !");
-            await MsgDialouge.ShowDialog(this);
-            return;
-        }
-        if (LogErrors && !Directory.Exists(data.Destination))
-        {
-            var MsgDialouge = MessageDialogInCenter(MessageDialogueType.Ok, "Error", "The destination directory of the loaded data doesn't exist anymore !");
-            await MsgDialouge.ShowDialog(this);
-            return;
-        }
-        if (!LogErrors && (!Directory.Exists(data.Destination) || !Directory.Exists(data.Source)))
-            return;
+        //if (LogErrors && !Directory.Exists(data.Source))
+        //{
+        //    var MsgDialouge = MessageDialogInCenter(MessageDialogueType.Ok, "Error", "The source directory of the loaded data doesn't exist anymore !");
+        //    await MsgDialouge.ShowDialog(this);
+        //    return;
+        //}
+        //if (LogErrors && !Directory.Exists(data.Destination))
+        //{
+        //    var MsgDialouge = MessageDialogInCenter(MessageDialogueType.Ok, "Error", "The destination directory of the loaded data doesn't exist anymore !");
+        //    await MsgDialouge.ShowDialog(this);
+        //    return;
+        //}
+        //if (!LogErrors && (!Directory.Exists(data.Destination) || !Directory.Exists(data.Source)))
+        //    return;
 
-        //Directory Modified Errors :
-        string Last = LogErrors ? "" : "Last ";
+        ////Directory Modified Errors :
+        //string Last = LogErrors ? "" : "Last ";
 
-        var sourcetime = Directory.GetLastWriteTime(data.Source);
-        if (sourcetime != data.SourceLastWriteTime)
-        {
-            var MsgDialouge = MessageDialogInCenter(MessageDialogueType.Ok, "Error", $"The source directory of the data has been modified , can't continue the {Last}copying !\nYou can restart the copying if you want");
-            await MsgDialouge.ShowDialog(this);
-            return;
-        }
+        //var sourcetime = Directory.GetLastWriteTime(data.Source);
+        //if (sourcetime != data.SourceLastWriteTime)
+        //{
+        //    var MsgDialouge = MessageDialogInCenter(MessageDialogueType.Ok, "Error", $"The source directory of the data has been modified , can't continue the {Last}copying !\nYou can restart the copying if you want");
+        //    await MsgDialouge.ShowDialog(this);
+        //    return;
+        //}
 
-        var destinationtime = Directory.GetLastWriteTime(data.Destination);
-        if (destinationtime != data.DestinationLastWriteTime)
-        {
-            var MsgDialouge = MessageDialogInCenter(MessageDialogueType.Ok, "Error", $"The destination directory of the data has been modified , can't continue the {Last}copying !\nYou can restart the copying if you want");
-            await MsgDialouge.ShowDialog(this);
-            return;
-        }
+        //var destinationtime = Directory.GetLastWriteTime(data.Destination);
+        //if (destinationtime != data.DestinationLastWriteTime)
+        //{
+        //    var MsgDialouge = MessageDialogInCenter(MessageDialogueType.Ok, "Error", $"The destination directory of the data has been modified , can't continue the {Last}copying !\nYou can restart the copying if you want");
+        //    await MsgDialouge.ShowDialog(this);
+        //    return;
+        //}
 
         SetUi(data);
 
@@ -484,6 +495,13 @@ public partial class MainWindow : Window
         SavingSys.SaveCopyingData(Data, workingfile);
         WorkingData = Data;
         _DataContext.IsPaused = true;
+    }
+
+    private async void AnErrorHappenedWhenCopying(object? msg)
+    {
+        var MsgDialogue = MessageDialogInCenter(MessageDialogueType.Ok, "ERROR !", (string)msg);
+
+        await MsgDialogue.ShowDialog(this);
     }
 }
 

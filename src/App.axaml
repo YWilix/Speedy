@@ -24,6 +24,7 @@
 
     <SolidColorBrush x:Key="DarkBackgColor" Color="#28283b" Opacity="0.96"/>
     <SolidColorBrush x:Key="DarkBackgColor2" Color="#34344a"/>
+    <SolidColorBrush x:Key="DarkBackgColor3" Color="#424261"/>
     <SolidColorBrush x:Key="DarkColor" Color="#252636" Opacity="0.02"/>
 
     <!-- Light Theme -->
@@ -39,6 +40,7 @@
 
   <Application.Styles>
     <FluentTheme/>
+       
       <!-- Main styles -->
 
       <!-- General Themes -->
@@ -210,7 +212,7 @@
       <Setter Property="Foreground" Value="White"/>
     </Style>
 
-    <Style Selector="CheckBox /template/ Border#NormalRectangle">
+    <Style Selector="CheckBox:not(:pointerover) /template/ Border#NormalRectangle">
       <Setter Property="BorderBrush" Value="White" />
     </Style>
 
@@ -262,11 +264,11 @@
       <Setter Property="Opacity" Value="0.5"/>
     </Style>
 
-    <Style Selector="TextBox:disabled /template/ Border">
+    <!--Style Selector="TextBox:disabled /template/ Border">
       <Setter Property="Background" Value="{StaticResource DarkColor}"/>
       <Setter Property="BorderBrush" Value="{StaticResource MainGradient}"/>
       <Setter Property="BorderThickness" Value="0.5"/>
-    </Style>
+    </Style -->
     
     <!-- Others -->
 

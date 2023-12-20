@@ -1,4 +1,5 @@
-﻿using Avalonia.Threading;
+﻿using Avalonia.Controls.Shapes;
+using Avalonia.Threading;
 using Speedy.Scripts.Data;
 using System;
 using System.Collections.Generic;
@@ -29,19 +30,32 @@ namespace Speedy.Scripts.Main
         /// <param name="DataContext">The data context of the main window (used to update the progress bar)</param>
         /// <param name="MaxWidth">The Width of the main window (used to update the progress bar)</param> 
         public static void CopyDifference(string From , string To , bool DeleteAdditionalFiles, bool KeepTheNewest , CancellationToken PauseToken ,
-                                          Action ToDoWhenComplete = null , Action<CopyingData> ToDoWhenPause = null,BaseWindowDataContext DataContext = null , 
+                                          Action ToDoWhenComplete = null , SendOrPostCallback ToDoWhenError = null, Action<CopyingData> ToDoWhenPause = null,BaseWindowDataContext DataContext = null , 
                                           double MaxWidth = 0, CopyingData Data = null)
         {
             bool ispause = false;
 
             try
             {
-                if (DeleteAdditionalFiles)
-                    DeleteDifferenceFiles(From, To, PauseToken, KeepTheNewest);
+                if (Directory.Exists(From))//Then we are copying the content of a directory
+                {
+                    if (DeleteAdditionalFiles)
+                        DeleteDifferenceFiles(From, To, PauseToken, KeepTheNewest);
 
-                var PassedCopyData = (Data != null && !Data.PausedOnDelete) ? Data : null;//The copy data to passe to CopyModifiedFiles function
+                    var PassedCopyData = (Data != null && !Data.PausedOnDelete) ? Data : null;//The copy data to passe to CopyModifiedFiles function
 
-                CopyModifiedFiles(From, To, KeepTheNewest, PauseToken ,PassedCopyData, DataContext , MaxWidth);
+                    CopyModifiedFiles(From, To, KeepTheNewest, PauseToken, PassedCopyData, DataContext, MaxWidth);
+                }
+                else
+                {
+                    var Paths = GetFilesPaths(From);
+
+                    IsFilesListValid(Paths);
+
+                    var PassedCopyData = (Data != null && !Data.PausedOnDelete) ? Data : null;//The copy data to passe to CopyModifiedFiles functio
+
+                    CopyAllFiles(Paths, To, KeepTheNewest, PauseToken, PassedCopyData, DataContext, MaxWidth);
+                }
             }
             catch(OperationCanceledException e) //The operation is canceled
             {
@@ -63,6 +77,12 @@ namespace Speedy.Scripts.Main
                 if (ToDoWhenPause != null)
                     ToDoWhenPause(LastState);
                 ispause = true;
+            }
+            catch (Exception e)
+            {
+                ispause = true;
+                if (ToDoWhenError != null)
+                    Dispatcher.UIThread.Post(ToDoWhenError,e.Message);
             }
             finally 
             {
@@ -108,8 +128,8 @@ namespace Speedy.Scripts.Main
                         PauseToken.ThrowIfCancellationRequested();
                     }
 
-                    var RelativeDirPath = Path.GetRelativePath(From, dir);
-                    var DirDestPath = Path.Combine(To,RelativeDirPath);// the directory that should be in the destination
+                    var RelativeDirPath = System.IO.Path.GetRelativePath(From, dir);
+                    var DirDestPath = System.IO.Path.Combine(To,RelativeDirPath);// the directory that should be in the destination
                     Directory.CreateDirectory(DirDestPath);
                 }
             }
@@ -128,8 +148,8 @@ namespace Speedy.Scripts.Main
                 for (int i = StartingFileIndex; i < AllFilesNumber; i++)//Copying all the files from the source
                 {
                     string f = AllFiles[i];
-                    string relativepath = Path.GetRelativePath(From, f);
-                    string newfile = Path.Combine(To, relativepath);
+                    string relativepath = System.IO.Path.GetRelativePath(From, f);
+                    string newfile = System.IO.Path.Combine(To, relativepath);
 
                     if (File.Exists(newfile))
                     {
@@ -246,6 +266,51 @@ namespace Speedy.Scripts.Main
             File.SetLastWriteTime(Destination, File.GetLastWriteTime(Source));//Setting the last write time so speedy knows it's not modified
         }
 
+            /// <summary>
+        /// Copies all the files in the list (Paths) to a destination directory (To)
+        /// </summary>
+        /// <param name="Paths">The paths of the files</param>
+        /// <param name="To">Destination directory</param>
+        /// <param name="KeepTheNewest">
+        /// indicates if we should always keep the newest version between the destination and the source file
+        /// </param>
+        public static void CopyAllFiles(List<string> Paths, string To, bool KeepTheNewest, CancellationToken PauseToken, CopyingData Data = null,
+                                               BaseWindowDataContext DataContext = null, double MaxWidth = 0)
+        {
+            int AllFilesNumber = Paths.Count;//getting the total number of files in the source
+            double Step = AllFilesNumber != 0 ? MaxWidth / AllFilesNumber : 0;//getting the step for each file
+
+            int StartingFileIndex = (Data != null && !Data.PausedWhenCreatingDirectories) ? Data.LastFileIndex : 0;
+            bool IsStoppingFile = Data != null && !Data.PausedWhenCreatingDirectories;//Is it the file that we paused it's copying operation
+
+            for (int i = StartingFileIndex; i < AllFilesNumber; i++)//Copying all the files from the source
+            {
+                string f = Paths[i];
+                string FileName = System.IO.Path.GetFileName(Paths[i]);
+                string newfile = System.IO.Path.Combine(To, FileName);
+
+                if (File.Exists(newfile))
+                {
+                    var destinationfiletime = File.GetLastWriteTime(newfile);
+                    var sourcefiletime = File.GetLastWriteTime(f);
+                    if (IsStoppingFile)//the file is the one that we need to continue it's copying
+                    {
+                        OverwriteFile(f, newfile, i, DataContext.ProgressWidth, PauseToken, KeepTheNewest, Data.LastPos);//copies the remaining difference
+                        IsStoppingFile = false;
+                    }
+                    else if ((KeepTheNewest && destinationfiletime < sourcefiletime) || (!KeepTheNewest && destinationfiletime != sourcefiletime))
+                        OverwriteFile(f, newfile, i, DataContext.ProgressWidth, PauseToken, KeepTheNewest);
+                }
+                else
+                {
+                    CopyFile(f, newfile, i, DataContext.ProgressWidth, PauseToken, KeepTheNewest);
+                }
+                DataContext.ProgressWidth += Step;// Updating the progress bar
+            }
+
+            DataContext.ProgressWidth = MaxWidth;
+        }
+
         /// <summary>
         /// Deletes the files that are in the destination directory but not in the source directory
         /// </summary>
@@ -274,8 +339,8 @@ namespace Speedy.Scripts.Main
                     }
                        
 
-                    string relativepath = Path.GetRelativePath(Destination,f);
-                    string newfile = Path.Combine(Source,relativepath);
+                    string relativepath = System.IO.Path.GetRelativePath(Destination,f);
+                    string newfile = System.IO.Path.Combine(Source,relativepath);
 
                     if (!File.Exists(newfile))
                         File.Delete(f);
@@ -291,8 +356,8 @@ namespace Speedy.Scripts.Main
                         PauseToken.ThrowIfCancellationRequested();//Canceling the copying
                     }
 
-                    var relativedir = Path.GetRelativePath(Destination, d);
-                    var newdir = Path.Combine(Source,relativedir);
+                    var relativedir = System.IO.Path.GetRelativePath(Destination, d);
+                    var newdir = System.IO.Path.Combine(Source,relativedir);
                     if (!Directory.Exists(newdir))
                         Directory.Delete(d,true);
                     else
@@ -300,5 +365,39 @@ namespace Speedy.Scripts.Main
                 }
             }
         }
+
+        public static List<string> GetFilesPaths(string str)
+        {
+            return new List<string>(str.Split(';'));
+        }
+
+        /// <summary>
+        /// Checks every file path and throws an exception if it doesn't exist (the function doesn't do anything if all paths are valid)
+        /// </summary>
+        /// <param name="paths">the list of files paths</param>²
+        public static void IsFilesListValid(List<string> paths)
+        {
+            List<string> FilesNames = new List<string>();
+
+            if (paths.Count == 0)
+                throw new Exception("you didn't specifie anything to copy");
+
+            foreach (string path in paths)
+            {
+                if (!File.Exists(path))
+                    throw new Exception($"The file {path} wasn't found ");
+
+
+                var FileName = System.IO.Path.GetFileName(path);
+                
+                if (FilesNames.Contains(FileName))
+                    throw new Exception($"The file name {FileName} exists more than one time");
+                else
+                    FilesNames.Add(FileName);
+            }
+
+
+        }
+
     }
 }

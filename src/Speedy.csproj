@@ -16,6 +16,10 @@
     <AvaloniaResource Include="Designs\**" />
   </ItemGroup>
   <ItemGroup>
+    <None Remove="Designs\Icons\FileIcon_File.png" />
+    <None Remove="Designs\Icons\InFolderIcon.png" />
+  </ItemGroup>
+  <ItemGroup>
     <Content Include="Designs\Logo\MainLogo.ico" />
   </ItemGroup>
 
