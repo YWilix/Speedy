@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net7.0</TargetFramework>
     <Nullable>enable</Nullable>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <StartupObject>Speedy.Program</StartupObject>
@@ -13,6 +13,8 @@
     <PackageIcon>MainLogo.png</PackageIcon>
     <AssemblyVersion>1.0.1</AssemblyVersion>
     <FileVersion>1.0.1</FileVersion>
+    <NoWarn>$(NoWarn);SYSLIB0011</NoWarn>
+    <Version>1.0.1</Version>
   </PropertyGroup>
   <ItemGroup>
     <AvaloniaResource Include="Designs\**" />

@@ -2,7 +2,6 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Speedy.Scripts;
 using Speedy.Scripts.Data;
 using Speedy.Scripts.Main;
