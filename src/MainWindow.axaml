@@ -106,7 +106,7 @@
                      VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="20"/>
           <TextBox Name="sourcebox" Classes.Light="{Binding IsLightTheme}" IsEnabled="{Binding !IsCopyingFiles}" 
                    Watermark="Please enter the path of the files/folder content to copy" VerticalAlignment="Center" HorizontalAlignment="Center"
-                   Height="40" Width="500" VerticalContentAlignment="Center"/>
+                   Height="40" Width="500" VerticalContentAlignment="Center" TextChanged="SourceTextChanged"/>
           <SplitButton x:Name="SourceSelectBt" Classes="FileButton" Classes.Light="{Binding IsLightTheme}" IsEnabled="{Binding !IsCopyingFiles}"
                   Width="40" Height="{Binding $self.Width}" >
             <SplitButton.Flyout>
@@ -138,7 +138,7 @@
                   Width="40" Height="{Binding $self.Width}"/>
         </StackPanel>
         
-        <StackPanel HorizontalAlignment="Center" Spacing="2">
+        <StackPanel HorizontalAlignment="Center" Spacing="2" IsEnabled="{Binding CanSpecifyParams}">
           <CheckBox Name="KeepDeletedBox" Classes.Light="{Binding IsLightTheme}" Content="Remove deleted files in destination" HorizontalAlignment="Center"
                     Margin="-2,0,0,0"/>
           <CheckBox Name="LatestVerBox" Classes.Light="{Binding IsLightTheme}" Content="Always choose latest version of files" HorizontalAlignment="Center"

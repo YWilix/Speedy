@@ -11,6 +11,8 @@
     <Company>Wilix</Company>
     <Copyright>Wilix</Copyright>
     <PackageIcon>MainLogo.png</PackageIcon>
+    <AssemblyVersion>1.0.1</AssemblyVersion>
+    <FileVersion>1.0.1</FileVersion>
   </PropertyGroup>
   <ItemGroup>
     <AvaloniaResource Include="Designs\**" />

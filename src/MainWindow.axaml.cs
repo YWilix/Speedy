@@ -2,6 +2,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Speedy.Scripts;
 using Speedy.Scripts.Data;
 using Speedy.Scripts.Main;
@@ -35,6 +36,7 @@ public partial class MainWindow : Window
         _DataContext = new BaseWindowDataContext();
         ThemeController.OnThemeChanged += _DataContext.ThemeChanged;
         _DataContext.PropertyChanged += PropertyChanged;//a function that handles some other changes when some property changes
+        _DataContext.CanSpecifyParamsCheck += () => Directory.Exists(sourcebox.Text); // a function that checks if the source exists as a directory
         DataContext = _DataContext;
         _DataContext.MaxWidth = this.Width;
         var SavedTheme = SavingSys.LoadTheme();
@@ -56,6 +58,11 @@ public partial class MainWindow : Window
     {
         ThemeController.MainTheme = _DataContext.IsLightTheme ? Avalonia.Styling.ThemeVariant.Dark : Avalonia.Styling.ThemeVariant.Light;
         SavingSys.SaveTheme();
+    }
+
+    public void SourceTextChanged(object sender, TextChangedEventArgs args)
+    {
+        _DataContext.CanSpecifyParamsChanged();
     }
 
     public async void MoveDifference(object sender, RoutedEventArgs args)
@@ -84,6 +91,19 @@ public partial class MainWindow : Window
         }
         try //Copying Files
         {
+            if (sourcebox.Text == null || sourcebox.Text.Replace(" ","").Replace("\t","") == "")
+            {
+                var ErrorMessageDial = MessageDialogInCenter(MessageDialogueType.Ok, "ERROR !", "You must specify a source");
+                await ErrorMessageDial.ShowDialog(this);
+                return;
+            }
+            if (destinationbox.Text == null || destinationbox.Text.Replace(" ","").Replace("\t", "") == "")
+            {
+                var ErrorMessageDial = MessageDialogInCenter(MessageDialogueType.Ok, "ERROR !","You must specify a destination");
+                await ErrorMessageDial.ShowDialog(this);
+                return;
+            }
+
             DeleteDefaultDataFile();//Removing the old copy data file
 
             SavingSys.ResetLastWorkingFile();//Resetting the "Last working file" file
@@ -348,40 +368,51 @@ public partial class MainWindow : Window
     /// </summary>
     private async Task LoadCopyData(CopyingData data, bool LogErrors = true)
     {
-        //Existence Errors :
-        //if (LogErrors && !Directory.Exists(data.Source))
-        //{
-        //    var MsgDialouge = MessageDialogInCenter(MessageDialogueType.Ok, "Error", "The source directory of the loaded data doesn't exist anymore !");
-        //    await MsgDialouge.ShowDialog(this);
-        //    return;
-        //}
-        //if (LogErrors && !Directory.Exists(data.Destination))
-        //{
-        //    var MsgDialouge = MessageDialogInCenter(MessageDialogueType.Ok, "Error", "The destination directory of the loaded data doesn't exist anymore !");
-        //    await MsgDialouge.ShowDialog(this);
-        //    return;
-        //}
-        //if (!LogErrors && (!Directory.Exists(data.Destination) || !Directory.Exists(data.Source)))
-        //    return;
+        string ErrorMessage = "";
 
-        ////Directory Modified Errors :
-        //string Last = LogErrors ? "" : "Last ";
+        //General Errors:
+        if (data._DataProductVersion == null)
+        {
+            ErrorMessage = "The Speedy Copying Data you're trying to load is of an older speedy version and it's no longer supported (Speedy version 1.0.0 needed)";
+            goto Error_Logging;
+        }
+        if (!Directory.Exists(data.Destination))
+        {
+            ErrorMessage = "The destination directory of the loaded data doesn't exist anymore !";
+            goto Error_Logging;
+        }
 
-        //var sourcetime = Directory.GetLastWriteTime(data.Source);
-        //if (sourcetime != data.SourceLastWriteTime)
-        //{
-        //    var MsgDialouge = MessageDialogInCenter(MessageDialogueType.Ok, "Error", $"The source directory of the data has been modified , can't continue the {Last}copying !\nYou can restart the copying if you want");
-        //    await MsgDialouge.ShowDialog(this);
-        //    return;
-        //}
 
-        //var destinationtime = Directory.GetLastWriteTime(data.Destination);
-        //if (destinationtime != data.DestinationLastWriteTime)
-        //{
-        //    var MsgDialouge = MessageDialogInCenter(MessageDialogueType.Ok, "Error", $"The destination directory of the data has been modified , can't continue the {Last}copying !\nYou can restart the copying if you want");
-        //    await MsgDialouge.ShowDialog(this);
-        //    return;
-        //}
+        //Errors of directory content copying:
+        if (data.IsDirectoryCopying) // Then this copying data is of a directory content
+        {
+            //Existence Errors :
+            if (!Directory.Exists(data.Source))
+            {
+                ErrorMessage = "The source directory of the loaded data doesn't exist anymore !";
+                goto Error_Logging;
+            }
+
+            ////Directory Modified Errors :
+
+            string Last = LogErrors ? "" : "Last ";
+
+            var sourcetime = Directory.GetLastWriteTime(data.Source);
+            if (sourcetime != data.SourceLastWriteTime)
+            {
+                ErrorMessage = $"The source directory of the data has been modified , can't continue the {Last}copying !\nYou can restart the copying if you want";
+                goto Error_Logging;
+            }
+
+            var destinationtime = Directory.GetLastWriteTime(data.Destination);
+            if (destinationtime != data.DestinationLastWriteTime)
+            {
+                ErrorMessage = $"The destination directory of the data has been modified , can't continue the {Last}copying !\nYou can restart the copying if you want";
+                goto Error_Logging;
+            }
+        }
+
+        //the actual function tasks :
 
         SetUi(data);
 
@@ -389,6 +420,16 @@ public partial class MainWindow : Window
         _DataContext.IsPaused = true;
 
         WorkingData = data;//setting the data we are working on
+
+
+    Error_Logging:// Logging Errors if needed
+
+        if (LogErrors && ErrorMessage != "")
+        {
+            var MsgDialouge = MessageDialogInCenter(MessageDialogueType.Ok, "Error", ErrorMessage);
+            await MsgDialouge.ShowDialog(this);
+            return;
+        }
     }
 
     //Ui related methods :
@@ -405,7 +446,7 @@ public partial class MainWindow : Window
         sourcebox.Text = Data.Source;
         destinationbox.Text = Data.Destination;
 
-        KeepDeletedBox.IsChecked = Data.KeepDeleted;
+        KeepDeletedBox.IsChecked = Data.RemoveAdditionalFiles;
         LatestVerBox.IsChecked = Data.KeepTheNewest;
 
         _DataContext.ProgressWidth = Data.LastProgressBarWidth;
@@ -509,6 +550,13 @@ public class BaseWindowDataContext : INotifyPropertyChanged
 {
     public event PropertyChangedEventHandler? PropertyChanged;
 
+    public event Func<bool> CanSpecifyParamsCheck;
+
+    /// <summary>
+    /// Represents if the user can specify parameters for the copying operation
+    /// </summary>
+    public bool CanSpecifyParams => !IsCopyingFiles && CanSpecifyParamsCheck();
+
     public bool IsLightTheme => ThemeController.MainTheme == Avalonia.Styling.ThemeVariant.Light;
 
     public bool IsPaused
@@ -533,6 +581,7 @@ public class BaseWindowDataContext : INotifyPropertyChanged
         set
         {
             _IsCopyingFiles = value;
+            CanSpecifyParamsChanged();
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsCopyingFiles)));
         }
     }
@@ -588,5 +637,10 @@ public class BaseWindowDataContext : INotifyPropertyChanged
     public void ThemeChanged()
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsLightTheme)));
+    }
+
+    public void CanSpecifyParamsChanged()
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CanSpecifyParams)));
     }
 }

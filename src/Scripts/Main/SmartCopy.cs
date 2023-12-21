@@ -1,4 +1,5 @@
-﻿using Avalonia.Controls.Shapes;
+﻿using System.Reflection;
+using System.Diagnostics;
 using Avalonia.Threading;
 using Speedy.Scripts.Data;
 using System;
@@ -35,9 +36,11 @@ namespace Speedy.Scripts.Main
         {
             bool ispause = false;
 
+            bool IsDirectory = Directory.Exists(From);
+
             try
             {
-                if (Directory.Exists(From))//Then we are copying the content of a directory
+                if (IsDirectory)//Then we are copying the content of a directory
                 {
                     if (DeleteAdditionalFiles)
                         DeleteDifferenceFiles(From, To, PauseToken, KeepTheNewest);
@@ -61,18 +64,31 @@ namespace Speedy.Scripts.Main
             {
                 LastState.Source = From;
                 LastState.Destination = To;
+                //Setting the Data Product Version
+                Assembly assembly = Assembly.GetExecutingAssembly();
+                FileVersionInfo fileVersionInfo = FileVersionInfo.GetVersionInfo(assembly.Location);
+                string version = fileVersionInfo.ProductVersion;
+                LastState._DataProductVersion = version;
 
                 //The KeepDeleted Bool shouldn't change from the first time it's been saved , this code ensures that 
                 if (Data == null)
-                    LastState.KeepDeleted = DeleteAdditionalFiles;
+                    LastState.RemoveAdditionalFiles = DeleteAdditionalFiles;
                 else
-                    LastState.KeepDeleted = Data.KeepDeleted;
+                    LastState.RemoveAdditionalFiles = Data.RemoveAdditionalFiles;
 
-                var sourcetime = Directory.GetLastWriteTime(From);
-                LastState.SourceLastWriteTime = sourcetime;
+                if (IsDirectory) 
+                {
+                    var sourcetime = Directory.GetLastWriteTime(From);
+                    LastState.SourceLastWriteTime = sourcetime;
 
-                var destinationtime = Directory.GetLastWriteTime(To);
-                LastState.DestinationLastWriteTime = destinationtime;
+                    var destinationtime = Directory.GetLastWriteTime(To);
+                    LastState.DestinationLastWriteTime = destinationtime;
+                }
+                else
+                {
+                    LastState.SourceLastWriteTime = null;
+                    LastState.DestinationLastWriteTime = null;
+                }
 
                 if (ToDoWhenPause != null)
                     ToDoWhenPause(LastState);
@@ -80,7 +96,6 @@ namespace Speedy.Scripts.Main
             }
             catch (Exception e)
             {
-                ispause = true;
                 if (ToDoWhenError != null)
                     Dispatcher.UIThread.Post(ToDoWhenError,e.Message);
             }
@@ -110,7 +125,7 @@ namespace Speedy.Scripts.Main
                 throw new ArgumentNullException(nameof(DataContext));
 
             // Reseting the progress bar or setting it to the last state
-            DataContext.ProgressWidth = Data == null ? 0 : Data.LastProgressBarWidth;
+            DataContext.ProgressWidth = Data == null ? 0 : Data.LastProgressWidthRelativeToFiles;
 
             if (Data != null && !Data.PausedWhenCreatingDirectories)//All the directories are already created
                 goto CopyingFiles;
@@ -157,17 +172,16 @@ namespace Speedy.Scripts.Main
                         var sourcefiletime = File.GetLastWriteTime(f);
                         if (IsStoppingFile)//the file is the one that we need to continue it's copying
                         {
-                            OverwriteFile(f, newfile, i, DataContext.ProgressWidth, PauseToken, KeepTheNewest, Data.LastPos);//copies the remaining difference
+                            OverwriteFile(f, newfile, i, DataContext.ProgressWidth, PauseToken, KeepTheNewest, Data.LastPos, Step: Step, DataContext: DataContext);//copies the remaining difference
                             IsStoppingFile = false;
                         }
                         else if ((KeepTheNewest && destinationfiletime < sourcefiletime) || (!KeepTheNewest && destinationfiletime != sourcefiletime))
-                            OverwriteFile(f, newfile, i, DataContext.ProgressWidth, PauseToken, KeepTheNewest);
+                            OverwriteFile(f, newfile, i, DataContext.ProgressWidth, PauseToken, KeepTheNewest,Step:Step,DataContext:DataContext);
                     }
                     else
                     {
-                        CopyFile(f, newfile, i, DataContext.ProgressWidth, PauseToken, KeepTheNewest);
+                        CopyFile(f, newfile, i, DataContext.ProgressWidth, PauseToken, KeepTheNewest, Step: Step, DataContext: DataContext);
                     }
-                    DataContext.ProgressWidth += Step;// Updating the progress bar
                 }
             }
             DataContext.ProgressWidth = MaxWidth;
@@ -179,18 +193,20 @@ namespace Speedy.Scripts.Main
         /// <param name="Source">The file to copy</param>
         /// <param name="Destination">The file to overwrite</param>
         /// <param name="index">The index of the file inside the main directory (used to save the copying data)</param>
-        /// <param name="ProgressBarWidth">The progress bar width when the system paused (used continue copying later)</param>
+        /// <param name="StartProgressBarWidth">The Starting Progress bar width (the width before the beginning of this function)</param>
         /// <param name="PauseToken">The tokken that pauses the copying operation</param>
         /// <param name="IsKeepTheNewest">indicates if the whole operation keeps the latest version (used when saving the copying data)</param>
         /// <param name="OldPos">the position to start copying the file from (used to continue copying where we stopped)</param>
-        public static void OverwriteFile(string Source , string Destination ,int index , double ProgressBarWidth ,
-                                                      CancellationToken PauseToken ,bool IsKeepTheNewest, long OldPos = 0)
+        /// <param name="Step">The step of change of the progress bar width for each file copied</param>
+        /// <param name="DataContext">The data context of the main window (used to modifie the progress bar)</param>
+        public static void OverwriteFile(string Source , string Destination ,int index , double StartProgressBarWidth , CancellationToken PauseToken ,
+                                         bool IsKeepTheNewest, long OldPos = 0 , double Step = 0 , BaseWindowDataContext DataContext = null)
         {
             if (!File.Exists(Source))
                 throw new FileNotFoundException($"The Source File {Source} doesn't exist {File.Exists(Source)} !");
             if (!File.Exists(Destination))
                 throw new FileNotFoundException($"The Destination File {Destination} doesn't exist !");
-
+            
             var Sourcef = new FileStream(Source, FileMode.Open , FileAccess.Read);// the source file stream
             var Destf = new FileStream(Destination, FileMode.Open , FileAccess.ReadWrite);// the destination file stream
 
@@ -206,14 +222,19 @@ namespace Speedy.Scripts.Main
             {
                 Destf.Write(buffer,0, bytesnumber);
 
+                double Percentage = Convert.ToDouble((Convert.ToDecimal(Destf.Position) / Convert.ToDecimal(Destf.Length)));
+                DataContext.ProgressWidth = StartProgressBarWidth + Percentage * Step;// Updating the progress bar
+
                 if (PauseToken.IsCancellationRequested)//Checking if the copying has paused
                 {
-                    LastState = new CopyingData("", "", index, Destf.Position, ProgressBarWidth,IsKeepTheNewest);
+                    LastState = new CopyingData("", "", index, Destf.Position, StartProgressBarWidth,IsKeepTheNewest, LastProgressBarWidth: DataContext.ProgressWidth);
                     Sourcef.Close();
                     Destf.Close();
                     PauseToken.ThrowIfCancellationRequested();
                 }
             }
+
+            DataContext.ProgressWidth = StartProgressBarWidth + Step;
 
             Sourcef.Close();
             Destf.Close();
@@ -226,11 +247,13 @@ namespace Speedy.Scripts.Main
         /// <param name="Source">The file to copy</param>
         /// <param name="Destination">The destination to copy the file to</param>
         /// <param name="index">The index of the file inside the main directory (used to save the copying data)</param>
-        /// <param name="ProgressBarWidth">The progress bar width when the system paused (used continue copying later)</param>
+        /// <param name="StartProgressBarWidth">The progress bar width when the system paused (used continue copying later)</param>
         /// <param name="PauseToken">The tokken that pauses the copying operation</param>
         /// <param name="IsKeepTheNewest">indicates if the whole operation keeps the latest version (used when saving the copying data)</param>
-        public static void CopyFile(string Source, string Destination, int index, double ProgressBarWidth,
-                                                      CancellationToken PauseToken, bool IsKeepTheNewest)
+        /// <param name="Step">The step of change of the progress bar width for each file copied</param>
+        /// <param name="DataContext">The data context of the main window (used to modifie the progress bar)</param>
+        public static void CopyFile(string Source, string Destination, int index, double StartProgressBarWidth, CancellationToken PauseToken ,
+                                    bool IsKeepTheNewest, double Step = 0, BaseWindowDataContext DataContext = null)
         {
             if (!File.Exists(Source))
                 throw new FileNotFoundException($"The Source File {Source} doesn't exist {File.Exists(Source)} !");
@@ -252,21 +275,27 @@ namespace Speedy.Scripts.Main
             {
                 Destf.Write(buffer, 0, bytesnumber);
 
+                double Percentage = Convert.ToDouble((Convert.ToDecimal(Destf.Position) / Convert.ToDecimal(Destf.Length)));
+                DataContext.ProgressWidth = StartProgressBarWidth + Percentage * Step;// Updating the progress bar
+
                 if (PauseToken.IsCancellationRequested)//Checking if the copying has paused
                 {
-                    LastState = new CopyingData("", "", index, Destf.Position, ProgressBarWidth, IsKeepTheNewest);
+                    LastState = new CopyingData("", "", index, Destf.Position, StartProgressBarWidth, IsKeepTheNewest,LastProgressBarWidth: DataContext.ProgressWidth);
                     Sourcef.Close();
                     Destf.Close();
                     PauseToken.ThrowIfCancellationRequested();
                 }
             }
+
+            DataContext.ProgressWidth = StartProgressBarWidth + Step;
+
             Sourcef.Close();
             Destf.Close();
 
             File.SetLastWriteTime(Destination, File.GetLastWriteTime(Source));//Setting the last write time so speedy knows it's not modified
         }
 
-            /// <summary>
+        /// <summary>
         /// Copies all the files in the list (Paths) to a destination directory (To)
         /// </summary>
         /// <param name="Paths">The paths of the files</param>
@@ -280,8 +309,10 @@ namespace Speedy.Scripts.Main
             int AllFilesNumber = Paths.Count;//getting the total number of files in the source
             double Step = AllFilesNumber != 0 ? MaxWidth / AllFilesNumber : 0;//getting the step for each file
 
-            int StartingFileIndex = (Data != null && !Data.PausedWhenCreatingDirectories) ? Data.LastFileIndex : 0;
-            bool IsStoppingFile = Data != null && !Data.PausedWhenCreatingDirectories;//Is it the file that we paused it's copying operation
+            int StartingFileIndex = Data != null ? Data.LastFileIndex : 0;
+            bool IsStoppingFile = Data != null;//Is it the file that we paused it's copying operation
+            long StartingFilePos = IsStoppingFile ? Data.LastPos : 0; // The starting position of the copying of the file
+            // used to not start the copying from the beginning if it's Saved
 
             for (int i = StartingFileIndex; i < AllFilesNumber; i++)//Copying all the files from the source
             {
@@ -290,22 +321,9 @@ namespace Speedy.Scripts.Main
                 string newfile = System.IO.Path.Combine(To, FileName);
 
                 if (File.Exists(newfile))
-                {
-                    var destinationfiletime = File.GetLastWriteTime(newfile);
-                    var sourcefiletime = File.GetLastWriteTime(f);
-                    if (IsStoppingFile)//the file is the one that we need to continue it's copying
-                    {
-                        OverwriteFile(f, newfile, i, DataContext.ProgressWidth, PauseToken, KeepTheNewest, Data.LastPos);//copies the remaining difference
-                        IsStoppingFile = false;
-                    }
-                    else if ((KeepTheNewest && destinationfiletime < sourcefiletime) || (!KeepTheNewest && destinationfiletime != sourcefiletime))
-                        OverwriteFile(f, newfile, i, DataContext.ProgressWidth, PauseToken, KeepTheNewest);
-                }
+                    OverwriteFile(f, newfile, i, DataContext.ProgressWidth, PauseToken, KeepTheNewest, StartingFilePos, Step: Step, DataContext: DataContext);//copies the remaining difference
                 else
-                {
-                    CopyFile(f, newfile, i, DataContext.ProgressWidth, PauseToken, KeepTheNewest);
-                }
-                DataContext.ProgressWidth += Step;// Updating the progress bar
+                    CopyFile(f, newfile, i, DataContext.ProgressWidth, PauseToken, KeepTheNewest, Step: Step, DataContext: DataContext);
             }
 
             DataContext.ProgressWidth = MaxWidth;
