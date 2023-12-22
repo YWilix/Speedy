@@ -160,6 +160,8 @@ namespace Speedy.Scripts.Main
 
             if (AllFiles != null)
             {
+                double CurrentProgressWidth = Data != null ? Data.LastProgressWidthRelativeToFiles : 0;
+
                 for (int i = StartingFileIndex; i < AllFilesNumber; i++)//Copying all the files from the source
                 {
                     string f = AllFiles[i];
@@ -182,6 +184,8 @@ namespace Speedy.Scripts.Main
                     {
                         CopyFile(f, newfile, i, DataContext.ProgressWidth, PauseToken, KeepTheNewest, Step: Step, DataContext: DataContext);
                     }
+
+                    CurrentProgressWidth = DataContext.ProgressWidth;
                 }
             }
             DataContext.ProgressWidth = MaxWidth;
@@ -314,6 +318,8 @@ namespace Speedy.Scripts.Main
             long StartingFilePos = IsStoppingFile ? Data.LastPos : 0; // The starting position of the copying of the file
             // used to not start the copying from the beginning if it's Saved
 
+            double CurrentProgressWidth = Data != null ? Data.LastProgressWidthRelativeToFiles : 0;
+
             for (int i = StartingFileIndex; i < AllFilesNumber; i++)//Copying all the files from the source
             {
                 string f = Paths[i];
@@ -321,9 +327,11 @@ namespace Speedy.Scripts.Main
                 string newfile = System.IO.Path.Combine(To, FileName);
 
                 if (File.Exists(newfile))
-                    OverwriteFile(f, newfile, i, DataContext.ProgressWidth, PauseToken, KeepTheNewest, StartingFilePos, Step: Step, DataContext: DataContext);//copies the remaining difference
+                    OverwriteFile(f, newfile, i, CurrentProgressWidth, PauseToken, KeepTheNewest, StartingFilePos, Step: Step, DataContext: DataContext);//copies the remaining difference
                 else
-                    CopyFile(f, newfile, i, DataContext.ProgressWidth, PauseToken, KeepTheNewest, Step: Step, DataContext: DataContext);
+                    CopyFile(f, newfile, i, CurrentProgressWidth, PauseToken, KeepTheNewest, Step: Step, DataContext: DataContext);
+
+                CurrentProgressWidth = DataContext.ProgressWidth;
             }
 
             DataContext.ProgressWidth = MaxWidth;
