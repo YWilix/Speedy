@@ -17,16 +17,16 @@
      > It's important to ***not modify the source and destination folders before completing a saved copying state*** . If one of the folder has been modified the copying won't function properly **( Speedy detects most of the time that a destination/source folder has been modified so you will stay informed )** 
 
     If you have **modified one of the folders** don't worry you can ***start a new copying operation to continue copying*** and as speedy **don't recopy unmodified files** you **won't wait to get to where you stopped** but it will have to restart copying the last file it was working on in the old operation
+
++ You can also select some **specific files** to copy into the destination folder in addition to the ability to **copy a folder's content** option making Speedy **useful** in every copying operation .  
      
 ### :wrench: Parameters :
 
-![SpeedyWindow_ShowingParams](https://github.com/YWilix/Speedy/assets/87858497/10877527-be76-4327-a10d-8492f292d2f0)
+![SpeedyWindow_ShowingParams_2](https://github.com/YWilix/Speedy/assets/87858497/b559b13a-716b-4310-81b4-ff8c6add1ec6)
 
 + Speedy gives you **2 parametres** controlling the behaviour of the copying operation :
-     
-     - ***Keep deleted files in destination*** : sometimes some files that are contained in the destination folder (the folder to copy data to) don't exist in the source folder (the folder to copy data from) , so ( to make the destination folder an exact replica of the source ) speedy will by default delete them
-       
-       To **prevent Speedy from doing that** you can **check** the **"Keep deleted files in destination"** parameter
+
+     - ***Remove deleted files in destination*** : sometimes some files that are contained in the destination folder (the folder to copy data to) don't exist in the source folder (the folder to copy data from) , so you can check this option **to remove them** and make sure the destination folder is **an exact replica** of the source
        
   - **Always choose latest version of files** : You can check this **when you have the same files in the destination and in the source folder** and you want to keep ***the newest version of both in the destination*** ( meaning that if a file's version in the source is **newer** than the destination one it will **overwrite it** else it **won't** )
 
