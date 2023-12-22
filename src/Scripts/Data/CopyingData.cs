@@ -59,5 +59,7 @@ namespace Speedy.Scripts.Data
             KeepTheNewest = keepTheNewest;
 
         }
+
+        public CopyingData() { }
     }
 }

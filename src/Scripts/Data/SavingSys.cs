@@ -1,7 +1,7 @@
 ﻿using Avalonia.Styling;
 using System;
 using System.IO;
-using System.Runtime.Serialization.Formatters.Binary;
+using System.Text.Json;
 
 namespace Speedy.Scripts.Data
 {
@@ -19,13 +19,11 @@ namespace Speedy.Scripts.Data
         /// </summary>
         /// <param name="Path">The path to save to</param>
         /// <param name="Obj">The object to save</param>
-        public static void SaveObj(string Path , object Obj)
+        public static void SaveObj<T>(string Path , T Obj)
         {
-            BinaryFormatter bf = new BinaryFormatter();
             FileStream fs = new FileStream(Path, FileMode.OpenOrCreate, FileAccess.Write);
-
-            bf.Serialize(fs, Obj);
-
+            JsonSerializerOptions opts = new JsonSerializerOptions() { IncludeFields = true};
+            JsonSerializer.Serialize(fs, Obj,opts);
             fs.Close();
         }
 
@@ -33,15 +31,14 @@ namespace Speedy.Scripts.Data
         /// loads an object from a path using a binaryformatter and returns it
         /// </summary>
         /// <param name="Path">The path to load from</param>
-        public static object LoadObj(string Path , bool Secure = true)
+        public static T LoadObj<T>(string Path)
         {
-            if (Secure && !File.Exists(Path))
-                return null;
+            if (!File.Exists(Path))
+                throw new Exception($"File {Path} not found !");
 
-            BinaryFormatter bf = new BinaryFormatter();
             FileStream fs = new FileStream(Path, FileMode.Open, FileAccess.Read);
-
-            object ToReturn = bf.Deserialize(fs);
+            JsonSerializerOptions opts = new JsonSerializerOptions() { IncludeFields = true };
+            T ToReturn = JsonSerializer.Deserialize<T>(fs,opts);
 
             fs.Close();
 
@@ -65,8 +62,7 @@ namespace Speedy.Scripts.Data
         public static bool? LoadTheme()
         {
             string Path = Environment.CurrentDirectory + @"\SpeedyData\Theme.std"; //the default theme path
-
-            return LoadObj(Path) as bool?;
+            return LoadObj<bool?>(Path);
         }
 
         /// <summary>
@@ -86,7 +82,7 @@ namespace Speedy.Scripts.Data
         {
             string _path = path == null ? defaultdatapath : path;
 
-            return LoadObj(_path) as CopyingData;
+            return LoadObj<CopyingData>(_path);
         } 
 
         /// <summary>
@@ -103,7 +99,7 @@ namespace Speedy.Scripts.Data
         /// </summary>
         public static string LoadLastWorkingFile()
         {
-            return LoadObj(defaultlastworkingfilepath) as string;
+            return LoadObj<string>(defaultlastworkingfilepath);
         }
 
         /// <summary>

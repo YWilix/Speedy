@@ -9,6 +9,7 @@ using Speedy.Windows;
 using System;
 using System.ComponentModel;
 using System.IO;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -38,9 +39,14 @@ public partial class MainWindow : Window
         _DataContext.CanSpecifyParamsCheck += () => Directory.Exists(sourcebox.Text); // a function that checks if the source exists as a directory
         DataContext = _DataContext;
         _DataContext.MaxWidth = this.Width;
-        var SavedTheme = SavingSys.LoadTheme();
-        if (SavedTheme != null)
+        try
+        {
+            var SavedTheme = SavingSys.LoadTheme();
             ThemeController.MainTheme = (bool)SavedTheme ? Avalonia.Styling.ThemeVariant.Light : Avalonia.Styling.ThemeVariant.Dark;
+        }
+        catch (Exception)
+        { //Theme file not found
+        }
         LoadLastCopyData();//loads the last paused copy data if exists
         var f = new OpenFileDialog();
 
@@ -286,6 +292,13 @@ public partial class MainWindow : Window
                 }
                 //setting the mainworkingfile so if paused again the copying operation save the data to the same file
             }
+        }
+        catch (JsonException e)
+        {
+            //unable to load the file
+            var MsgDialogue = MessageDialogInCenter(MessageDialogueType.Ok, "ERROR !", "Unable to load that file");
+
+            await MsgDialogue.ShowDialog(this);
         }
         catch (Exception e)
         {
