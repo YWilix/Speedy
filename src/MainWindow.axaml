@@ -114,6 +114,9 @@
                 <StackPanel Orientation="Vertical" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
                   <Button Name="FromDirBt" Classes="Clickable" Click="SelectSourceAsAFile" HorizontalAlignment="Center" VerticalAlignment="Stretch" Height="24"
                           Width="30" Margin="2,2,2,5" >
+                    <ToolTip.Tip>
+                      <TextBlock Classes.Light="{Binding IsLightTheme}" Text="Move specific files"/>
+                    </ToolTip.Tip>
                     <Button.Background>
                       <ImageBrush Source="avares://Speedy/Designs/Icons/FileIcon_File.png" Stretch="Uniform" AlignmentX="Center"/>
                     </Button.Background>
@@ -122,7 +125,11 @@
                     </Button.OpacityMask>
                   </Button>
                   <Button Classes="FileButton" Click="SelectSourceAsAFolder" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Width="27"
-                          Height="20" Margin="2,0,2,2"/>
+                          Height="20" Margin="2,0,2,2">
+                    <ToolTip.Tip>
+                      <TextBlock Classes.Light="{Binding IsLightTheme}" Text="Move a directory's content"/>
+                    </ToolTip.Tip>
+                  </Button>
                 </StackPanel>
               </Flyout>
             </SplitButton.Flyout>

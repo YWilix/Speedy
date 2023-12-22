@@ -22,7 +22,7 @@ namespace Speedy.Scripts.Data
         public static void SaveObj<T>(string Path , T Obj)
         {
             FileStream fs = new FileStream(Path, FileMode.OpenOrCreate, FileAccess.Write);
-            JsonSerializerOptions opts = new JsonSerializerOptions() { IncludeFields = true};
+            JsonSerializerOptions opts = new JsonSerializerOptions() { IncludeFields = true , WriteIndented = true };
             JsonSerializer.Serialize(fs, Obj,opts);
             fs.Close();
         }
@@ -37,7 +37,7 @@ namespace Speedy.Scripts.Data
                 throw new Exception($"File {Path} not found !");
 
             FileStream fs = new FileStream(Path, FileMode.Open, FileAccess.Read);
-            JsonSerializerOptions opts = new JsonSerializerOptions() { IncludeFields = true };
+            JsonSerializerOptions opts = new JsonSerializerOptions() { IncludeFields = true , WriteIndented = true};
             T ToReturn = JsonSerializer.Deserialize<T>(fs,opts);
 
             fs.Close();
